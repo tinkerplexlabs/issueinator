@@ -62,5 +62,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-22
-Stopped at: Completed 01-01-PLAN.md — Google Services Gradle plugin wired, BUILD SUCCESSFUL. Ready for plan 01-02 (Google Sign-In native flow).
+Stopped at: Checkpoint Task 3 in 01-02-PLAN.md — Tasks 1 and 2 complete, awaiting physical device verification of Google Sign-In end-to-end flow.
 Resume file: None
