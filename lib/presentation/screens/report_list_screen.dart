@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:issueinator/application/controllers/report_list_controller.dart';
-// TODO(02-03): ReportDetailScreen navigation - implement in plan 02-03
-// import 'package:issueinator/presentation/screens/report_detail_screen.dart';
+import 'package:issueinator/presentation/screens/report_detail_screen.dart';
 
 class ReportListScreen extends StatefulWidget {
   final String productName;
@@ -132,16 +131,11 @@ class _ReportListScreenState extends State<ReportListScreen> {
                   ),
                   isThreeLine: report.platform != null,
                   onTap: () {
-                    // TODO(02-03): ReportDetailScreen navigation - implement in plan 02-03
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (_) => ReportDetailScreen(reportId: report.id),
-                    //   ),
-                    // );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Detail view coming in next plan'),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            ReportDetailScreen(reportId: report.id),
                       ),
                     );
                   },
