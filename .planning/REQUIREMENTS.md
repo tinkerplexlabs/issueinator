@@ -31,8 +31,8 @@
 
 ### Triage
 
-- [ ] **TRIA-01**: Developer can tag a report with one of: issue / feedback / duplicate / not-a-bug / needs-info
-- [ ] **TRIA-02**: Developer can add text comments to a report
+- [x] **TRIA-01**: Developer can tag a report with one of: issue / feedback / duplicate / not-a-bug / needs-info
+- [x] **TRIA-02**: Developer can add text comments to a report
 - [ ] **TRIA-03**: Developer can select multiple reports and batch-tag them
 - [ ] **TRIA-04**: Reports tagged "duplicate" are excluded from GitHub sync
 
@@ -82,8 +82,8 @@
 | DETL-01 | Phase 2 | Complete |
 | DETL-02 | Phase 2 | Complete |
 | DETL-03 | Phase 2 | Complete |
-| TRIA-01 | Phase 3 | Pending |
-| TRIA-02 | Phase 3 | Pending |
+| TRIA-01 | Phase 3 | Complete |
+| TRIA-02 | Phase 3 | Complete |
 | TRIA-03 | Phase 3 | Pending |
 | TRIA-04 | Phase 3 | Pending |
 | SYNC-01 | Phase 4 | Pending |
@@ -99,4 +99,4 @@
 
 ---
 *Requirements defined: 2026-03-22*
-*Last updated: 2026-03-22 after 02-02 completion*
+*Last updated: 2026-03-22 after 03-01 completion*

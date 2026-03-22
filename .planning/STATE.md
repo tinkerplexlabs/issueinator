@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-03-21)
 
 **Core value:** Every bug report gets triaged — tagged, commented, and either synced to the right GitHub repo or dismissed with reason
-**Current focus:** Phase 2 — Bug Report Read Path
+**Current focus:** Phase 3 — Triage Actions
 
 ## Current Position
 
-Phase: 2 of 4 (Bug Report Read Path)
-Plan: 3 of 3 in current phase (02-03 complete)
-Status: Phase 2 complete — ready for Phase 3
-Last activity: 2026-03-22 — 02-03 complete: ReportDetailScreen with zoomable screenshot, log truncation, admin banner; full read path verified on device
+Phase: 3 of 4 (Triage Actions)
+Plan: 1 of 3 in current phase (03-01 complete)
+Status: Phase 3 in progress — triage data layer complete, ready for 03-02 (triage UI)
+Last activity: 2026-03-22 — 03-01 complete: TriageTag enum, BugReportTriage model, repository CRUD (saveTriage/getTriageForReport/batchSaveTriage), parallel triage enrichment, set-difference unprocessed count, TriageController in DI
 
-Progress: [█████░░░░░] ~38% (5 plans complete)
+Progress: [██████░░░░] ~50% (6 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: ~35 min
-- Total execution time: ~70 min
+- Total plans completed: 6
+- Average duration: ~28 min
+- Total execution time: ~72 min
 
 **By Phase:**
 
@@ -29,9 +29,10 @@ Progress: [█████░░░░░] ~38% (5 plans complete)
 |-------|-------|-------|----------|
 | 01-auth-foundation | 2 | ~70 min | ~35 min |
 | 02-bug-report-read-path | 3 | ~48 min | ~16 min |
+| 03-triage-actions | 1 | ~2 min | ~2 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (~25 min), 01-02 (~45 min), 02-03 (~45 min)
+- Last 5 plans: 01-01 (~25 min), 01-02 (~45 min), 02-03 (~45 min), 03-01 (~2 min)
 - Trend: baseline established
 
 *Updated after each plan completion*
@@ -58,6 +59,9 @@ Recent decisions affecting current work:
 - [02-03]: Screenshot fetch split from metadata fetch — on-demand load + compute() decode on background isolate avoids jank on large images
 - [02-03]: Log truncation to last 512KB — prevents UI freeze on multi-MB log payloads; expand button reveals full content
 - [02-03]: Admin UUID updated to tinkertestautomation@gmail.com to match Supabase RLS policy
+- [03-01]: Unprocessed count changed from github_issue_url IS NULL proxy to triage_tag set-difference (fetch all triaged IDs once, intersect per product)
+- [03-01]: getReportsByProduct uses Future.wait parallel fetch with in-memory join — no N+1 queries
+- [03-01]: saveTriage uses conditional spread so partial updates (tag-only or comment-only) work without overwriting existing values
 
 ### Pending Todos
 
@@ -72,5 +76,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-22
-Stopped at: Completed 02-03-PLAN.md — Phase 2 complete; ReportDetailScreen verified on device; ready for Phase 3 (triage write path)
+Stopped at: Completed 03-01-PLAN.md — triage data layer complete; TriageController + repository CRUD + updated counts in DI; ready for 03-02 (triage UI)
 Resume file: None

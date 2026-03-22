@@ -49,7 +49,7 @@ Plans:
 Plans:
 - [x] 02-01-PLAN.md — Domain models, BugReportRepository, controllers, and DI registration
 - [x] 02-02-PLAN.md — Dashboard HomeScreen rewrite with product counts + ReportListScreen with pull-to-refresh
-- [ ] 02-03-PLAN.md — ReportDetailScreen with zoomable screenshot + end-to-end device verification
+- [x] 02-03-PLAN.md — ReportDetailScreen with zoomable screenshot + end-to-end device verification
 
 ### Phase 3: Triage Actions
 **Goal**: Developer can categorize and annotate every report so nothing is left unprocessed
@@ -60,7 +60,12 @@ Plans:
   2. Developer can add a text comment to a report and it appears on subsequent visits to that report
   3. Developer can select multiple reports and apply a tag to all of them in one action
   4. Reports tagged "duplicate" are visually excluded from the GitHub sync action (no sync button shown or it is disabled)
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [x] 03-01-PLAN.md — Supabase migration (bug_report_triage table + RLS), TriageTag enum, BugReportTriage model, repository CRUD, TriageController, DI registration, updated unprocessed count
+- [ ] 03-02-PLAN.md — Triage UI: tag picker and comment field on ReportDetailScreen
+- [ ] 03-03-PLAN.md — Bulk triage: multi-select on report list + batch apply tag
 
 ### Phase 4: GitHub Sync
 **Goal**: Developer can push "issue"-tagged reports to the correct GitHub repo without creating duplicates
@@ -83,5 +88,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Auth Foundation | 2/2 | Complete | 2026-03-22 |
 | 2. Bug Report Read Path | 3/3 | Complete   | 2026-03-22 |
-| 3. Triage Actions | 0/? | Not started | - |
+| 3. Triage Actions | 1/3 | In progress | - |
 | 4. GitHub Sync | 0/? | Not started | - |
