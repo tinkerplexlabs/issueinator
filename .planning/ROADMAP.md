@@ -28,7 +28,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. After signing in, the app navigates to the main UI and the admin UUID is the authenticated user
   3. After closing and reopening the app cold, the developer is still signed in — no sign-in prompt appears
   4. The bug_reports table returns rows (not an empty list) after sign-in completes
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Firebase/Android config: google-services.json, SHA-1 fingerprint, Gradle plugin wiring
+- [ ] 01-02-PLAN.md — Dart implementation: add google_sign_in package, replace signInAnonymously() with signInWithGoogle(), update AuthScreen button, device verification
 
 ### Phase 2: Bug Report Read Path
 **Goal**: Developer can see all bug reports across products with enough context to decide what to triage
@@ -72,7 +76,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Auth Foundation | 0/? | Not started | - |
+| 1. Auth Foundation | 0/2 | Planned | - |
 | 2. Bug Report Read Path | 0/? | Not started | - |
 | 3. Triage Actions | 0/? | Not started | - |
 | 4. GitHub Sync | 0/? | Not started | - |
