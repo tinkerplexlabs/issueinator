@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 ## Current Position
 
 Phase: 3 of 4 (Triage Actions)
-Plan: 1 of 3 in current phase (03-01 complete)
-Status: Phase 3 in progress — triage data layer complete, ready for 03-02 (triage UI)
-Last activity: 2026-03-22 — 03-01 complete: TriageTag enum, BugReportTriage model, repository CRUD (saveTriage/getTriageForReport/batchSaveTriage), parallel triage enrichment, set-difference unprocessed count, TriageController in DI
+Plan: 2 of 3 in current phase (03-02 complete)
+Status: Phase 3 in progress — triage UI complete (tag picker, comment, duplicate exclusion, list display); ready for 03-03 (bulk triage)
+Last activity: 2026-03-22 — 03-02 complete: tag picker bottom sheet, comment field with persist, duplicate exclusion chip, list real triage tag display
 
-Progress: [██████░░░░] ~50% (6 plans complete)
+Progress: [███████░░░] ~58% (7 plans complete)
 
 ## Performance Metrics
 
@@ -29,11 +29,11 @@ Progress: [██████░░░░] ~50% (6 plans complete)
 |-------|-------|-------|----------|
 | 01-auth-foundation | 2 | ~70 min | ~35 min |
 | 02-bug-report-read-path | 3 | ~48 min | ~16 min |
-| 03-triage-actions | 1 | ~2 min | ~2 min |
+| 03-triage-actions | 2 | ~4 min | ~2 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (~25 min), 01-02 (~45 min), 02-03 (~45 min), 03-01 (~2 min)
-- Trend: baseline established
+- Last 5 plans: 01-01 (~25 min), 01-02 (~45 min), 02-03 (~45 min), 03-01 (~2 min), 03-02 (~2 min)
+- Trend: fast execution on well-defined UI tasks
 
 *Updated after each plan completion*
 
@@ -62,6 +62,9 @@ Recent decisions affecting current work:
 - [03-01]: Unprocessed count changed from github_issue_url IS NULL proxy to triage_tag set-difference (fetch all triaged IDs once, intersect per product)
 - [03-01]: getReportsByProduct uses Future.wait parallel fetch with in-memory join — no N+1 queries
 - [03-01]: saveTriage uses conditional spread so partial updates (tag-only or comment-only) work without overwriting existing values
+- [03-02]: Capture ScaffoldMessenger before async gaps — lint requires context not used after await; store ref in local var before first await
+- [03-02]: Detail screen fetches triage sequentially after detail load in single _fetchDetail — simpler lifecycle, no separate triggers
+- [03-02]: List refresh uses Navigator.push(...).then((_) => controller.refresh()) — avoids BuildContext async gap, integrates with existing controller.refresh()
 
 ### Pending Todos
 
@@ -76,5 +79,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-22
-Stopped at: Completed 03-01-PLAN.md — triage data layer complete; TriageController + repository CRUD + updated counts in DI; ready for 03-02 (triage UI)
+Stopped at: Completed 03-02-PLAN.md — triage UI complete; tag picker bottom sheet, comment field, duplicate exclusion, list real triage tags; ready for 03-03 (bulk triage)
 Resume file: None

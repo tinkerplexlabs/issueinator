@@ -88,5 +88,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Auth Foundation | 2/2 | Complete | 2026-03-22 |
 | 2. Bug Report Read Path | 3/3 | Complete   | 2026-03-22 |
-| 3. Triage Actions | 1/3 | In progress | - |
+| 3. Triage Actions | 2/3 | In Progress|  |
 | 4. GitHub Sync | 0/? | Not started | - |

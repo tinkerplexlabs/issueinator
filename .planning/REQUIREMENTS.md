@@ -34,7 +34,7 @@
 - [x] **TRIA-01**: Developer can tag a report with one of: issue / feedback / duplicate / not-a-bug / needs-info
 - [x] **TRIA-02**: Developer can add text comments to a report
 - [ ] **TRIA-03**: Developer can select multiple reports and batch-tag them
-- [ ] **TRIA-04**: Reports tagged "duplicate" are excluded from GitHub sync
+- [x] **TRIA-04**: Reports tagged "duplicate" are excluded from GitHub sync
 
 ### GitHub Sync
 
@@ -85,7 +85,7 @@
 | TRIA-01 | Phase 3 | Complete |
 | TRIA-02 | Phase 3 | Complete |
 | TRIA-03 | Phase 3 | Pending |
-| TRIA-04 | Phase 3 | Pending |
+| TRIA-04 | Phase 3 | Complete |
 | SYNC-01 | Phase 4 | Pending |
 | SYNC-02 | Phase 4 | Pending |
 | SYNC-03 | Phase 4 | Pending |
