@@ -24,14 +24,18 @@ class AuthScreen extends StatelessWidget {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 48),
-            FilledButton(
-              onPressed: () => GetIt.instance<AuthController>().signInAnonymously(),
-              child: const Text('Sign In (Dev Mode)'),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Note: Full Google SSO in Phase 1-02 checkpoint',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ListenableBuilder(
+              listenable: GetIt.instance<AuthController>(),
+              builder: (context, _) {
+                final controller = GetIt.instance<AuthController>();
+                return FilledButton.icon(
+                  onPressed: controller.isLoading ? null : () => controller.signInWithGoogle(),
+                  icon: const Icon(Icons.login),
+                  label: controller.isLoading
+                      ? const Text('Signing in...')
+                      : const Text('Sign in with Google'),
+                );
+              },
             ),
           ],
         ),
