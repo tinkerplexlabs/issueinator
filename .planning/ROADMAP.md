@@ -64,8 +64,8 @@ Plans:
 
 Plans:
 - [x] 03-01-PLAN.md — Supabase migration (bug_report_triage table + RLS), TriageTag enum, BugReportTriage model, repository CRUD, TriageController, DI registration, updated unprocessed count
-- [ ] 03-02-PLAN.md — Triage UI: tag picker and comment field on ReportDetailScreen
-- [ ] 03-03-PLAN.md — Bulk triage: multi-select on report list + batch apply tag
+- [x] 03-02-PLAN.md — Triage UI: tag picker and comment field on ReportDetailScreen
+- [x] 03-03-PLAN.md — Bulk triage: multi-select on report list + batch apply tag
 
 ### Phase 4: GitHub Sync
 **Goal**: Developer can push "issue"-tagged reports to the correct GitHub repo without creating duplicates
@@ -77,7 +77,11 @@ Plans:
   3. Syncing the same report a second time does not create a duplicate GitHub issue — the existing one is detected and linked instead
   4. After a successful sync, the report's github_issue_url is visible in the report detail and in the list item
   5. A 401 from the GitHub API prompts the developer to re-authenticate via Device Flow rather than silently failing
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Domain + infrastructure: SyncResult model, GitHubSyncService (hash dedup, screenshot upload, issue creation, DB write-back), SyncController, DI
+- [ ] 04-02-PLAN.md — UI integration: sync button on detail screen, 401 re-auth, synced badge on list items, device verification
 
 ## Progress
 
@@ -88,5 +92,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Auth Foundation | 2/2 | Complete | 2026-03-22 |
 | 2. Bug Report Read Path | 3/3 | Complete   | 2026-03-22 |
-| 3. Triage Actions | 2/3 | In Progress|  |
-| 4. GitHub Sync | 0/? | Not started | - |
+| 3. Triage Actions | 3/3 | Complete | 2026-03-22 |
+| 4. GitHub Sync | 0/2 | Not started | - |
