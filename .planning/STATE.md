@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 ## Current Position
 
 Phase: 1 of 4 (Auth Foundation)
-Plan: 0 of ? in current phase
-Status: Ready to plan
-Last activity: 2026-03-22 — Roadmap created; all 21 v1 requirements mapped to 4 phases
+Plan: 1 of ? in current phase (01-01 complete)
+Status: In progress
+Last activity: 2026-03-22 — 01-01 complete: Google Services Gradle plugin wired, BUILD SUCCESSFUL
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] ~5% (1 plan complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: -
+- Total plans completed: 1
+- Average duration: ~25 min
+- Total execution time: ~25 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01-auth-foundation | 1 | ~25 min | ~25 min |
 
 **Recent Trend:**
-- Last 5 plans: n/a
-- Trend: n/a
+- Last 5 plans: 01-01 (~25 min)
+- Trend: baseline established
 
 *Updated after each plan completion*
 
@@ -46,6 +46,8 @@ Recent decisions affecting current work:
 - [Pre-work]: Column projection mandatory in list queries — screenshot_base64 must never be fetched in list
 - [Pre-work]: Fingerprint-based dedup required for GitHub sync before writing any sync code
 - [Pre-work]: Prefer bug_report_triage side table over adding columns to bug_reports (shared schema safety)
+- [01-01]: Defer google_play_services_version meta-data to plan 02 — adding @integer/google_play_services_version before play-services-auth library is on classpath causes AAPT resource link failure
+- [01-01]: Google Services plugin pattern: buildscript classpath in root build.gradle.kts, id() apply in app/build.gradle.kts — matches puzzlenook reference exactly
 
 ### Pending Todos
 
@@ -53,12 +55,12 @@ None yet.
 
 ### Blockers/Concerns
 
-- [Phase 1]: google-services.json and OAuth client ID setup for com.tinkerplexlabs.issueinator needs verification before Phase 1 plan executes (config work, not architecture)
+- ~~[Phase 1]: google-services.json and OAuth client ID setup for com.tinkerplexlabs.issueinator needs verification before Phase 1 plan executes~~ RESOLVED in 01-01
 - [Phase 2]: Schema decision (columns vs. side table) must be finalized before any write migration is run
 - [Phase 4]: GitHub Search API indexing speed for fingerprint dedup — validate during Phase 4 planning
 
 ## Session Continuity
 
 Last session: 2026-03-22
-Stopped at: Roadmap created, STATE.md initialized — ready to plan Phase 1
+Stopped at: Completed 01-01-PLAN.md — Google Services Gradle plugin wired, BUILD SUCCESSFUL. Ready for plan 01-02 (Google Sign-In native flow).
 Resume file: None
