@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 ## Current Position
 
 Phase: 2 of 4 (Bug Report Read Path)
-Plan: 1 of 3 in current phase (02-01 complete)
+Plan: 2 of 3 in current phase (02-02 complete)
 Status: In progress
-Last activity: 2026-03-22 — 02-01 complete: data layer built (models, repository, controllers, DI)
+Last activity: 2026-03-22 — 02-02 complete: HomeScreen dashboard and ReportListScreen with pull-to-refresh
 
-Progress: [███░░░░░░░] ~15% (3 plans complete)
+Progress: [████░░░░░░] ~25% (4 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
+- Total plans completed: 4
 - Average duration: ~35 min
 - Total execution time: ~70 min
 
@@ -28,7 +28,7 @@ Progress: [███░░░░░░░] ~15% (3 plans complete)
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-auth-foundation | 2 | ~70 min | ~35 min |
-| 02-bug-report-read-path | 1 | ~2 min | ~2 min |
+| 02-bug-report-read-path | 2 | ~3 min | ~1.5 min |
 
 **Recent Trend:**
 - Last 5 plans: 01-01 (~25 min), 01-02 (~45 min)
@@ -53,6 +53,8 @@ Recent decisions affecting current work:
 - [01-02]: key.properties at android/ loaded in build.gradle.kts with graceful fallback; both debug and release build types use upload signingConfig when key.properties is present
 - [02-01]: Column projection strictly enforced — select('*') only in getReportDetail; list query uses explicit column string omitting screenshot_base64
 - [02-01]: Unprocessed proxy for Phase 2 is github_issue_url IS NULL; comment placed in repository to replace with triage_tag in Phase 3
+- [02-02]: HomeScreen loads product names with select('name') then delegates to DashboardController.loadCounts() — screen owns name discovery, controller owns count logic
+- [02-02]: ReportDetailScreen navigation stubbed as SnackBar in 02-02; TODO(02-03) comment marks exact wiring point in report_list_screen.dart
 
 ### Pending Todos
 
@@ -67,5 +69,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-22
-Stopped at: Completed 02-01-PLAN.md — data layer (models, repository, controllers, DI) complete; ready for UI plans 02-02 and 02-03
+Stopped at: Completed 02-02-PLAN.md — HomeScreen dashboard and ReportListScreen complete; ready for plan 02-03 (ReportDetailScreen)
 Resume file: None

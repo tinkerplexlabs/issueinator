@@ -13,13 +13,13 @@
 ### Dashboard
 
 - [x] **DASH-01**: Developer sees per-product report counts on the home screen
-- [ ] **DASH-02**: Developer can tap a product to drill into its report list
+- [x] **DASH-02**: Developer can tap a product to drill into its report list
 - [x] **DASH-03**: Dashboard shows unprocessed vs total counts per product
 
 ### Report List
 
 - [x] **LIST-01**: Developer sees scrollable list of bug reports filtered by product
-- [ ] **LIST-02**: Each list item shows description preview, platform, date, and triage status
+- [x] **LIST-02**: Each list item shows description preview, platform, date, and triage status
 - [x] **LIST-03**: List excludes screenshot_base64 from query (column projection for performance)
 - [x] **LIST-04**: Developer can pull-to-refresh the report list
 
@@ -70,13 +70,13 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
+| AUTH-01 | Phase 1 | Complete |
+| AUTH-02 | Phase 1 | Complete |
 | DASH-01 | Phase 2 | Complete |
-| DASH-02 | Phase 2 | Pending |
+| DASH-02 | Phase 2 | Complete |
 | DASH-03 | Phase 2 | Complete |
 | LIST-01 | Phase 2 | Complete |
-| LIST-02 | Phase 2 | Pending |
+| LIST-02 | Phase 2 | Complete |
 | LIST-03 | Phase 2 | Complete |
 | LIST-04 | Phase 2 | Complete |
 | DETL-01 | Phase 2 | Pending |
@@ -99,4 +99,4 @@
 
 ---
 *Requirements defined: 2026-03-22*
-*Last updated: 2026-03-22 after initial definition*
+*Last updated: 2026-03-22 after 02-02 completion*
