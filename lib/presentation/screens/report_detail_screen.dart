@@ -5,10 +5,13 @@ import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:issueinator/application/controllers/sync_controller.dart';
 import 'package:issueinator/application/controllers/triage_controller.dart';
 import 'package:issueinator/domain/models/bug_report_detail.dart';
 import 'package:issueinator/domain/models/bug_report_triage.dart';
+import 'package:issueinator/domain/models/sync_result.dart';
 import 'package:issueinator/infrastructure/repositories/bug_report_repository.dart';
+import 'package:issueinator/presentation/widgets/github_device_flow_dialog.dart';
 
 class ReportDetailScreen extends StatefulWidget {
   final String reportId;
@@ -29,6 +32,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
 
   BugReportTriage? _triage;
   final TextEditingController _commentController = TextEditingController();
+  final SyncController _syncController = GetIt.instance<SyncController>();
 
   /// 512 KB log truncation limit
   static const int _logTruncateBytes = 512 * 1024;
@@ -109,6 +113,55 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
           SnackBar(content: Text('Could not open: $url')),
         );
       }
+    }
+  }
+
+  Future<void> _syncReport(BuildContext context) async {
+    // Capture refs before any await per project convention (03-02 decision).
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    final result = await _syncController.sync(widget.reportId, _detail!);
+    switch (result) {
+      case SyncSuccess(:final issueUrl):
+        messenger.showSnackBar(
+          SnackBar(
+            content: const Text('GitHub issue created'),
+            action: SnackBarAction(
+              label: 'View',
+              onPressed: () => _launchGitHubUrl(issueUrl),
+            ),
+          ),
+        );
+        _fetchDetail();
+      case SyncDuplicate(:final existingUrl):
+        messenger.showSnackBar(
+          SnackBar(
+            content: const Text('Existing GitHub issue linked'),
+            action: SnackBarAction(
+              label: 'View',
+              onPressed: () => _launchGitHubUrl(existingUrl),
+            ),
+          ),
+        );
+        _fetchDetail();
+      case SyncError(:final message, :final requiresReAuth):
+        if (requiresReAuth) {
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text('GitHub token expired — please re-authenticate'),
+            ),
+          );
+          if (mounted) {
+            await showModalBottomSheet<void>(
+              context: navigator.context,
+              isDismissible: false,
+              enableDrag: false,
+              builder: (_) => const GitHubDeviceFlowSheet(),
+            );
+          }
+        } else {
+          messenger.showSnackBar(SnackBar(content: Text(message)));
+        }
     }
   }
 
@@ -297,7 +350,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         ),
         const SizedBox(height: 8),
 
-        // Duplicate exclusion chip
+        // Sync status slot
         if (isDuplicate)
           const Chip(label: Text('Duplicate — excluded from GitHub sync'))
         else if (detail.githubIssueUrl != null)
@@ -305,6 +358,24 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
             avatar: const Icon(Icons.open_in_new, size: 16),
             label: const Text('View GitHub Issue'),
             onPressed: () => _launchGitHubUrl(detail.githubIssueUrl!),
+          )
+        else if (currentTag == TriageTag.issue)
+          ListenableBuilder(
+            listenable: _syncController,
+            builder: (context, _) {
+              final isSyncing = _syncController.isSyncing;
+              return FilledButton.icon(
+                onPressed: isSyncing ? null : () => _syncReport(context),
+                icon: isSyncing
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.upload),
+                label: Text(isSyncing ? 'Syncing\u2026' : 'Sync to GitHub'),
+              );
+            },
           )
         else
           Text(

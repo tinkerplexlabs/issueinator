@@ -296,6 +296,14 @@ class _ReportListScreenState extends State<ReportListScreen> {
                                 isUnprocessed ? FontWeight.bold : null,
                           ),
                         ),
+                        if (report.githubIssueUrl != null) ...[
+                          const SizedBox(width: 6),
+                          const Icon(
+                            Icons.link,
+                            size: 14,
+                            color: Colors.green,
+                          ),
+                        ],
                       ],
                     ),
                     isThreeLine: report.platform != null,
