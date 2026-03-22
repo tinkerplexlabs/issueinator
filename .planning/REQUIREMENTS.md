@@ -38,11 +38,11 @@
 
 ### GitHub Sync
 
-- [ ] **SYNC-01**: Developer can sync "issue"-tagged reports to the correct GitHub repo based on source_app
-- [ ] **SYNC-02**: Sync uses content hash dedup (hash embedded in issue body as HTML comment) to prevent duplicate GitHub issues
-- [ ] **SYNC-03**: After creating a GitHub issue, github_issue_url is written back to Supabase
-- [ ] **SYNC-04**: Sync uploads screenshot to Supabase Storage and embeds public URL in GitHub issue body
-- [ ] **SYNC-05**: Sync routes to correct repo per product (e.g., freecell → tinkerplexlabs/freecell)
+- [x] **SYNC-01**: Developer can sync "issue"-tagged reports to the correct GitHub repo based on source_app
+- [x] **SYNC-02**: Sync uses content hash dedup (hash embedded in issue body as HTML comment) to prevent duplicate GitHub issues
+- [x] **SYNC-03**: After creating a GitHub issue, github_issue_url is written back to Supabase
+- [x] **SYNC-04**: Sync uploads screenshot to Supabase Storage and embeds public URL in GitHub issue body
+- [x] **SYNC-05**: Sync routes to correct repo per product (e.g., freecell → tinkerplexlabs/freecell)
 
 ## v2 Requirements
 
@@ -86,11 +86,11 @@
 | TRIA-02 | Phase 3 | Complete |
 | TRIA-03 | Phase 3 | Complete |
 | TRIA-04 | Phase 3 | Complete |
-| SYNC-01 | Phase 4 | Pending |
-| SYNC-02 | Phase 4 | Pending |
-| SYNC-03 | Phase 4 | Pending |
-| SYNC-04 | Phase 4 | Pending |
-| SYNC-05 | Phase 4 | Pending |
+| SYNC-01 | Phase 4 | Complete |
+| SYNC-02 | Phase 4 | Complete |
+| SYNC-03 | Phase 4 | Complete |
+| SYNC-04 | Phase 4 | Complete |
+| SYNC-05 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 21 total

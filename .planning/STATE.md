@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 
 ## Current Position
 
-Phase: 3 of 4 (Triage Actions) — COMPLETE
-Plan: 3 of 3 in current phase (03-03 complete)
-Status: Phase 3 complete — full triage workflow verified on device (tag picker, comment, duplicate exclusion, list display, multi-select batch tag); ready for Phase 4 (GitHub Sync)
-Last activity: 2026-03-22 — 03-03 complete: multi-select mode, batch tag picker, PopScope back-button handling, cross-product selection leak prevention
+Phase: 4 of 4 (GitHub Sync) — In Progress
+Plan: 1 of 3 in current phase (04-01 complete)
+Status: Phase 4 Plan 1 complete — GitHub sync backend: SyncResult, GitHubSyncService, SyncController wired in DI; no UI yet (04-02 next)
+Last activity: 2026-03-22 — 04-01 complete: SHA-256 hash dedup via GraphQL, Supabase screenshot upload, REST issue creation, SyncController with double-tap guard
 
-Progress: [████████░░] ~67% (8 plans complete)
+Progress: [█████████░] ~75% (9 plans complete)
 
 ## Performance Metrics
 
@@ -36,6 +36,7 @@ Progress: [████████░░] ~67% (8 plans complete)
 - Trend: fast execution on well-defined UI tasks
 
 *Updated after each plan completion*
+| Phase 04-github-sync P01 | 2 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -67,6 +68,10 @@ Recent decisions affecting current work:
 - [03-02]: List refresh uses Navigator.push(...).then((_) => controller.refresh()) — avoids BuildContext async gap, integrates with existing controller.refresh()
 - [Phase 03-triage-actions]: clearSelection called at start of loadReports to prevent cross-product selection leaks
 - [Phase 03-triage-actions]: PopScope(canPop: !isSelectionMode) replaces deprecated WillPopScope for back-button selection clear
+- [Phase 04-github-sync]: GraphQL search used for dedup (not REST /search/issues) — REST returns 422 for private repos
+- [Phase 04-github-sync]: html_url from REST issue create response (not url) — url is API URL, html_url is web URL
+- [Phase 04-github-sync]: Screenshot upload is non-fatal — sync proceeds without screenshot if upload fails
+- [Phase 04-github-sync]: 401 on any GitHub API call triggers revokeToken() + requiresReAuth: true
 
 ### Pending Todos
 
@@ -81,5 +86,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-22
-Stopped at: Completed 03-03-PLAN.md — Phase 3 complete: full triage workflow verified on device; multi-select batch tag, PopScope back handling; ready for Phase 4 (GitHub Sync)
+Stopped at: Completed 04-01-PLAN.md — GitHub sync backend complete: SyncResult model, GitHubSyncService impl, SyncController wired; ready for 04-02 (sync UI)
 Resume file: None
