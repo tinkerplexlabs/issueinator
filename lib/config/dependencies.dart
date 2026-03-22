@@ -1,7 +1,10 @@
 import 'package:get_it/get_it.dart';
 import 'package:issueinator/application/controllers/auth_controller.dart';
+import 'package:issueinator/application/controllers/dashboard_controller.dart';
+import 'package:issueinator/application/controllers/report_list_controller.dart';
 import 'package:issueinator/domain/services/github_auth_service.dart';
 import 'package:issueinator/infrastructure/persistence/local_storage.dart';
+import 'package:issueinator/infrastructure/repositories/bug_report_repository.dart';
 import 'package:issueinator/infrastructure/services/github_auth_service_impl.dart';
 
 final getIt = GetIt.instance;
@@ -15,4 +18,17 @@ Future<void> configureDependencies() async {
 
   // Auth controller (Supabase + GitHub)
   getIt.registerSingleton<AuthController>(AuthController());
+
+  // Bug report data layer
+  getIt.registerSingleton<BugReportRepository>(BugReportRepository());
+
+  // Dashboard controller (product counts)
+  getIt.registerSingleton<DashboardController>(
+    DashboardController(getIt<BugReportRepository>()),
+  );
+
+  // Report list controller (per-product report list)
+  getIt.registerSingleton<ReportListController>(
+    ReportListController(getIt<BugReportRepository>()),
+  );
 }
