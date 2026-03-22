@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:issueinator/application/controllers/report_list_controller.dart';
+import 'package:issueinator/domain/models/bug_report_triage.dart';
+import 'package:issueinator/infrastructure/repositories/bug_report_repository.dart';
 import 'package:issueinator/presentation/screens/report_detail_screen.dart';
 
 class ReportListScreen extends StatefulWidget {
@@ -26,45 +28,141 @@ class _ReportListScreenState extends State<ReportListScreen> {
     return '${name[0].toUpperCase()}${name.substring(1)}';
   }
 
+  IconData _iconForTag(TriageTag tag) {
+    return switch (tag) {
+      TriageTag.issue => Icons.bug_report,
+      TriageTag.feedback => Icons.chat_bubble_outline,
+      TriageTag.duplicate => Icons.content_copy,
+      TriageTag.notABug => Icons.check_circle_outline,
+      TriageTag.needsInfo => Icons.help_outline,
+    };
+  }
+
+  Color _colorForTag(TriageTag tag) {
+    return switch (tag) {
+      TriageTag.issue => Colors.red,
+      TriageTag.feedback => Colors.blue,
+      TriageTag.duplicate => Colors.grey,
+      TriageTag.notABug => Colors.green,
+      TriageTag.needsInfo => Colors.orange,
+    };
+  }
+
+  void _showBatchTagPicker(
+    BuildContext context,
+    ReportListController controller,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      builder:
+          (_) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    'Tag Selected Reports',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                ...TriageTag.values.map(
+                  (tag) => ListTile(
+                    leading: Icon(_iconForTag(tag), color: _colorForTag(tag)),
+                    title: Text(tag.label),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final repo = GetIt.instance<BugReportRepository>();
+                      await controller.batchTag(tag.value, repo);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_displayName),
-      ),
-      body: ListenableBuilder(
-        listenable: GetIt.instance<ReportListController>(),
-        builder: (context, _) {
-          final controller = GetIt.instance<ReportListController>();
+    return ListenableBuilder(
+      listenable: GetIt.instance<ReportListController>(),
+      builder: (context, _) {
+        final controller = GetIt.instance<ReportListController>();
 
-          if (controller.isLoading && controller.reports.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
+        return PopScope(
+          canPop: !controller.isSelectionMode,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) controller.clearSelection();
+          },
+          child: Scaffold(
+            appBar: _buildAppBar(context, controller),
+            body: _buildBody(context, controller),
+          ),
+        );
+      },
+    );
+  }
 
-          if (controller.error != null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Error: ${controller.error}'),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: () =>
-                        controller.loadReports(widget.productName),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            );
-          }
+  PreferredSizeWidget _buildAppBar(
+    BuildContext context,
+    ReportListController controller,
+  ) {
+    if (controller.isSelectionMode) {
+      return AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => controller.clearSelection(),
+        ),
+        title: Text('${controller.selectedCount} selected'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.select_all),
+            tooltip: 'Select all',
+            onPressed: () {
+              for (final r in controller.reports) {
+                if (!controller.selectedIds.contains(r.id)) {
+                  controller.toggleSelection(r.id);
+                }
+              }
+            },
+          ),
+        ],
+      );
+    }
 
-          if (controller.reports.isEmpty) {
-            return const Center(
-              child: Text('No reports for this product'),
-            );
-          }
+    return AppBar(title: Text(_displayName));
+  }
 
-          return RefreshIndicator(
+  Widget _buildBody(BuildContext context, ReportListController controller) {
+    if (controller.isLoading && controller.reports.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (controller.error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Error: ${controller.error}'),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: () => controller.loadReports(widget.productName),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (controller.reports.isEmpty) {
+      return const Center(child: Text('No reports for this product'));
+    }
+
+    return Column(
+      children: [
+        Expanded(
+          child: RefreshIndicator(
             onRefresh: () => controller.refresh(),
             child: ListView.builder(
               itemCount: controller.reports.length,
@@ -73,6 +171,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
                 final triageTag = report.triageTag;
                 final hasTag = triageTag != null;
                 final isUnprocessed = !hasTag;
+                final isSelected = controller.selectedIds.contains(report.id);
 
                 // Determine display properties based on triage state
                 Color triageColor;
@@ -113,20 +212,33 @@ class _ReportListScreenState extends State<ReportListScreen> {
                 }
 
                 return Container(
-                  color: report.triageTag == null
-                      ? const Color(0xFF3D2E1E)
-                      : null,
+                  color:
+                      isSelected
+                          ? Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer.withAlpha(80)
+                          : report.triageTag == null
+                          ? const Color(0xFF3D2E1E)
+                          : null,
                   child: ListTile(
+                    leading:
+                        controller.isSelectionMode
+                            ? Checkbox(
+                              value: isSelected,
+                              onChanged:
+                                  (_) => controller.toggleSelection(report.id),
+                            )
+                            : null,
                     title: Text(
                       report.descriptionPreview,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: isUnprocessed
-                          ? Theme.of(context)
-                              .textTheme
-                              .bodyLarge
-                              ?.copyWith(fontWeight: FontWeight.bold)
-                          : null,
+                      style:
+                          isUnprocessed
+                              ? Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              )
+                              : null,
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,32 +249,32 @@ class _ReportListScreenState extends State<ReportListScreen> {
                             if (report.platform != null) ...[
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: isUnprocessed
-                                      ? Colors.deepOrange.withAlpha(60)
-                                      : Theme.of(context)
-                                          .colorScheme
-                                          .surfaceContainerHighest,
+                                  color:
+                                      isUnprocessed
+                                          ? Colors.deepOrange.withAlpha(60)
+                                          : Theme.of(
+                                            context,
+                                          ).colorScheme.surfaceContainerHighest,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
                                   report.platform!,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelSmall
-                                      ?.copyWith(
-                                        fontWeight: isUnprocessed
-                                            ? FontWeight.bold
-                                            : null,
-                                      ),
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.labelSmall?.copyWith(
+                                    fontWeight:
+                                        isUnprocessed ? FontWeight.bold : null,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 8),
                             ],
                             Text(
-                              DateFormat('MMM d, yyyy')
-                                  .format(report.createdAt),
+                              DateFormat('MMM d, yyyy').format(report.createdAt),
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
@@ -176,33 +288,68 @@ class _ReportListScreenState extends State<ReportListScreen> {
                         const SizedBox(width: 4),
                         Text(
                           triageLabel,
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: triageColor,
-                                    fontWeight: isUnprocessed
-                                        ? FontWeight.bold
-                                        : null,
-                                  ),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodySmall?.copyWith(
+                            color: triageColor,
+                            fontWeight:
+                                isUnprocessed ? FontWeight.bold : null,
+                          ),
                         ),
                       ],
                     ),
                     isThreeLine: report.platform != null,
+                    onLongPress: () {
+                      if (!controller.isSelectionMode) {
+                        controller.enterSelectionMode(report.id);
+                      }
+                    },
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              ReportDetailScreen(reportId: report.id),
-                        ),
-                      ).then((_) => controller.refresh());
+                      if (controller.isSelectionMode) {
+                        controller.toggleSelection(report.id);
+                      } else {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (_) =>
+                                    ReportDetailScreen(reportId: report.id),
+                          ),
+                        ).then((_) => controller.refresh());
+                      }
                     },
                   ),
                 );
               },
             ),
-          );
-        },
-      ),
+          ),
+        ),
+        // Bottom action bar — shown when in selection mode with selections
+        if (controller.isSelectionMode && controller.selectedCount > 0)
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainer,
+              boxShadow: const [
+                BoxShadow(blurRadius: 4, color: Colors.black26),
+              ],
+            ),
+            child: SafeArea(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('${controller.selectedCount} selected'),
+                  FilledButton.icon(
+                    onPressed:
+                        () => _showBatchTagPicker(context, controller),
+                    icon: const Icon(Icons.label),
+                    label: const Text('Tag selected'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
