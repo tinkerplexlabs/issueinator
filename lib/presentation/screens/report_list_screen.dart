@@ -70,17 +70,50 @@ class _ReportListScreenState extends State<ReportListScreen> {
               itemCount: controller.reports.length,
               itemBuilder: (context, index) {
                 final report = controller.reports[index];
-                final isSynced = report.githubIssueUrl != null;
-                final isUnprocessed = !isSynced;
-                // Phase 2 proxy: replace with triage tag display in Phase 3
-                final triageColor =
-                    isSynced ? Colors.green : Colors.deepOrange;
-                final triageIcon =
-                    isSynced ? Icons.sync : Icons.error_outline;
-                final triageLabel = isSynced ? 'Synced' : 'Unprocessed';
+                final triageTag = report.triageTag;
+                final hasTag = triageTag != null;
+                final isUnprocessed = !hasTag;
+
+                // Determine display properties based on triage state
+                Color triageColor;
+                IconData triageIcon;
+                String triageLabel;
+
+                if (triageTag == null) {
+                  triageColor = Colors.deepOrange;
+                  triageIcon = Icons.error_outline;
+                  triageLabel = 'Unprocessed';
+                } else {
+                  switch (triageTag) {
+                    case 'issue':
+                      triageColor = Colors.red;
+                      triageIcon = Icons.bug_report;
+                      triageLabel = 'Issue';
+                    case 'feedback':
+                      triageColor = Colors.blue;
+                      triageIcon = Icons.chat_bubble_outline;
+                      triageLabel = 'Feedback';
+                    case 'duplicate':
+                      triageColor = Colors.grey;
+                      triageIcon = Icons.content_copy;
+                      triageLabel = 'Duplicate';
+                    case 'not-a-bug':
+                      triageColor = Colors.green;
+                      triageIcon = Icons.check_circle_outline;
+                      triageLabel = 'Not a Bug';
+                    case 'needs-info':
+                      triageColor = Colors.orange;
+                      triageIcon = Icons.help_outline;
+                      triageLabel = 'Needs Info';
+                    default:
+                      triageColor = Colors.grey;
+                      triageIcon = Icons.label_outline;
+                      triageLabel = triageTag;
+                  }
+                }
 
                 return Container(
-                  color: isUnprocessed
+                  color: report.triageTag == null
                       ? const Color(0xFF3D2E1E)
                       : null,
                   child: ListTile(
@@ -161,7 +194,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
                           builder: (_) =>
                               ReportDetailScreen(reportId: report.id),
                         ),
-                      );
+                      ).then((_) => controller.refresh());
                     },
                   ),
                 );
