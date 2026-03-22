@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 ## Current Position
 
 Phase: 1 of 4 (Auth Foundation)
-Plan: 1 of ? in current phase (01-01 complete)
+Plan: 2 of ? in current phase (01-01 and 01-02 complete)
 Status: In progress
-Last activity: 2026-03-22 — 01-01 complete: Google Services Gradle plugin wired, BUILD SUCCESSFUL
+Last activity: 2026-03-22 — 01-02 complete: Google Sign-In verified on device, admin UUID confirmed, RLS working, session persistence confirmed
 
-Progress: [█░░░░░░░░░] ~5% (1 plan complete)
+Progress: [██░░░░░░░░] ~10% (2 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: ~25 min
-- Total execution time: ~25 min
+- Total plans completed: 2
+- Average duration: ~35 min
+- Total execution time: ~70 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-auth-foundation | 1 | ~25 min | ~25 min |
+| 01-auth-foundation | 2 | ~70 min | ~35 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (~25 min)
+- Last 5 plans: 01-01 (~25 min), 01-02 (~45 min)
 - Trend: baseline established
 
 *Updated after each plan completion*
@@ -48,6 +48,8 @@ Recent decisions affecting current work:
 - [Pre-work]: Prefer bug_report_triage side table over adding columns to bug_reports (shared schema safety)
 - [01-01]: Defer google_play_services_version meta-data to plan 02 — adding @integer/google_play_services_version before play-services-auth library is on classpath causes AAPT resource link failure
 - [01-01]: Google Services plugin pattern: buildscript classpath in root build.gradle.kts, id() apply in app/build.gradle.kts — matches puzzlenook reference exactly
+- [01-02]: Use upload keystore for debug builds — Google Sign-In silently fails when APK SHA-1 doesn't match Firebase-registered fingerprint; default debug keystore SHA-1 was not registered
+- [01-02]: key.properties at android/ loaded in build.gradle.kts with graceful fallback; both debug and release build types use upload signingConfig when key.properties is present
 
 ### Pending Todos
 
@@ -62,5 +64,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-22
-Stopped at: Checkpoint Task 3 in 01-02-PLAN.md — Tasks 1 and 2 complete, awaiting physical device verification of Google Sign-In end-to-end flow.
+Stopped at: Completed 01-02-PLAN.md — Google Sign-In verified on device, AUTH-01 and AUTH-02 requirements complete
 Resume file: None

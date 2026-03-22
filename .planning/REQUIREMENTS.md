@@ -7,8 +7,8 @@
 
 ### Authentication
 
-- [ ] **AUTH-01**: Developer can sign in with Google SSO (replacing anonymous auth), authenticating as admin UUID
-- [ ] **AUTH-02**: Session persists across app restarts without re-authentication
+- [x] **AUTH-01**: Developer can sign in with Google SSO (replacing anonymous auth), authenticating as admin UUID
+- [x] **AUTH-02**: Session persists across app restarts without re-authentication
 
 ### Dashboard
 

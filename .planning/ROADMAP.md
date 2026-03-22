@@ -12,7 +12,7 @@ IssueInator has a working scaffold — GitHub Device Flow auth, anonymous Supaba
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Auth Foundation** - Replace anonymous auth with Google Sign-In so RLS grants bug_reports access
+- [x] **Phase 1: Auth Foundation** - Replace anonymous auth with Google Sign-In so RLS grants bug_reports access
 - [ ] **Phase 2: Bug Report Read Path** - Dashboard summary, filterable report list, and full detail view with screenshots
 - [ ] **Phase 3: Triage Actions** - Tag reports, add comments, batch-tag multiple reports
 - [ ] **Phase 4: GitHub Sync** - Push "issue"-tagged reports to the correct GitHub repo with dedup protection
@@ -32,7 +32,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md — Firebase/Android config: google-services.json, SHA-1 fingerprint, Gradle plugin wiring
-- [ ] 01-02-PLAN.md — Dart implementation: add google_sign_in package, replace signInAnonymously() with signInWithGoogle(), update AuthScreen button, device verification
+- [x] 01-02-PLAN.md — Dart implementation: add google_sign_in package, replace signInAnonymously() with signInWithGoogle(), update AuthScreen button, device verification
 
 ### Phase 2: Bug Report Read Path
 **Goal**: Developer can see all bug reports across products with enough context to decide what to triage
@@ -76,7 +76,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Auth Foundation | 1/2 | In progress | - |
+| 1. Auth Foundation | 2/2 | Complete | 2026-03-22 |
 | 2. Bug Report Read Path | 0/? | Not started | - |
 | 3. Triage Actions | 0/? | Not started | - |
 | 4. GitHub Sync | 0/? | Not started | - |
