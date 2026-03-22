@@ -5,7 +5,9 @@ import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:issueinator/application/controllers/triage_controller.dart';
 import 'package:issueinator/domain/models/bug_report_detail.dart';
+import 'package:issueinator/domain/models/bug_report_triage.dart';
 import 'package:issueinator/infrastructure/repositories/bug_report_repository.dart';
 
 class ReportDetailScreen extends StatefulWidget {
@@ -25,6 +27,9 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   bool _screenshotLoading = false;
   bool _showFullLogs = false;
 
+  BugReportTriage? _triage;
+  final TextEditingController _commentController = TextEditingController();
+
   /// 512 KB log truncation limit
   static const int _logTruncateBytes = 512 * 1024;
 
@@ -32,6 +37,12 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   void initState() {
     super.initState();
     _fetchDetail();
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchDetail() async {
@@ -48,6 +59,16 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         setState(() {
           _detail = detail;
           _isLoading = false;
+        });
+      }
+
+      // Fetch triage data after detail loads
+      final triageController = GetIt.instance<TriageController>();
+      final triage = await triageController.getTriage(widget.reportId);
+      if (mounted) {
+        setState(() {
+          _triage = triage;
+          _commentController.text = triage?.comment ?? '';
         });
       }
     } catch (e) {
@@ -89,6 +110,98 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         );
       }
     }
+  }
+
+  void _showTagPicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text(
+                'Apply Triage Tag',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+            ...TriageTag.values.map(
+              (tag) => ListTile(
+                leading: Icon(_iconForTag(tag), color: _colorForTag(tag)),
+                title: Text(tag.label),
+                trailing: _triage?.tag == tag ? const Icon(Icons.check) : null,
+                onTap: () {
+                  Navigator.pop(context);
+                  _applyTag(tag);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _applyTag(TriageTag tag) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final controller = GetIt.instance<TriageController>();
+    final success = await controller.applyTag(widget.reportId, tag);
+    if (success && mounted) {
+      // Re-fetch triage to confirm persistence
+      final triage = await controller.getTriage(widget.reportId);
+      setState(() => _triage = triage);
+    } else if (mounted) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Failed to apply tag: ${controller.error}')),
+      );
+    }
+  }
+
+  Future<void> _saveComment() async {
+    final text = _commentController.text.trim();
+    if (text.isEmpty) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final controller = GetIt.instance<TriageController>();
+    final success = await controller.saveComment(widget.reportId, text);
+    if (success && mounted) {
+      final triage = await controller.getTriage(widget.reportId);
+      setState(() => _triage = triage);
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Comment saved')),
+      );
+    } else if (mounted) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Failed to save comment: ${controller.error}'),
+        ),
+      );
+    }
+  }
+
+  IconData _iconForTag(TriageTag tag) {
+    return switch (tag) {
+      TriageTag.issue => Icons.bug_report,
+      TriageTag.feedback => Icons.chat_bubble_outline,
+      TriageTag.duplicate => Icons.content_copy,
+      TriageTag.notABug => Icons.check_circle_outline,
+      TriageTag.needsInfo => Icons.help_outline,
+    };
+  }
+
+  Color _colorForTag(TriageTag tag) {
+    return switch (tag) {
+      TriageTag.issue => Colors.red,
+      TriageTag.feedback => Colors.blue,
+      TriageTag.duplicate => Colors.grey,
+      TriageTag.notABug => Colors.green,
+      TriageTag.needsInfo => Colors.orange,
+    };
+  }
+
+  Color _chipColorForTag(TriageTag? tag) {
+    if (tag == null) return Colors.grey.shade600;
+    return _colorForTag(tag);
   }
 
   @override
@@ -138,19 +251,23 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
           _buildStatusBar(context, detail),
           const SizedBox(height: 24),
 
-          // Section 2: Core fields
+          // Section 2: Triage comment
+          _buildTriageComment(context),
+          const SizedBox(height: 24),
+
+          // Section 3: Core fields
           _buildCoreFields(context, detail, dateFormat),
           const SizedBox(height: 24),
 
-          // Section 3: Device info
+          // Section 4: Device info
           _buildDeviceInfo(context, detail),
           const SizedBox(height: 24),
 
-          // Section 4: Logs
+          // Section 5: Logs
           _buildLogs(context, detail),
           const SizedBox(height: 24),
 
-          // Section 5: Screenshot
+          // Section 6: Screenshot
           _buildScreenshot(context),
           const SizedBox(height: 24),
         ],
@@ -159,19 +276,31 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   }
 
   Widget _buildStatusBar(BuildContext context, BugReportDetail detail) {
+    final currentTag = _triage?.tag;
+    final isDuplicate = currentTag == TriageTag.duplicate;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Phase 3: replace with actual triage tag from bug_report_triage table
-        Chip(
-          avatar: const Icon(Icons.label_outline, size: 16),
-          label: const Text('Not yet triaged'),
-          backgroundColor:
-              Theme.of(context).colorScheme.surfaceContainerHighest,
-          labelStyle: TextStyle(color: Colors.grey[600]),
+        // Tappable triage chip
+        ActionChip(
+          avatar: Icon(
+            currentTag != null ? _iconForTag(currentTag) : Icons.label_outline,
+            size: 16,
+            color: _chipColorForTag(currentTag),
+          ),
+          label: Text(
+            currentTag?.label ?? 'Not yet triaged',
+            style: TextStyle(color: _chipColorForTag(currentTag)),
+          ),
+          onPressed: () => _showTagPicker(context),
         ),
         const SizedBox(height: 8),
-        if (detail.githubIssueUrl != null)
+
+        // Duplicate exclusion chip
+        if (isDuplicate)
+          const Chip(label: Text('Duplicate — excluded from GitHub sync'))
+        else if (detail.githubIssueUrl != null)
           ActionChip(
             avatar: const Icon(Icons.open_in_new, size: 16),
             label: const Text('View GitHub Issue'),
@@ -185,6 +314,29 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                 .bodySmall
                 ?.copyWith(color: Colors.grey),
           ),
+      ],
+    );
+  }
+
+  Widget _buildTriageComment(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Triage Comment', style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _commentController,
+          maxLines: 3,
+          decoration: const InputDecoration(
+            hintText: 'Add a comment...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 8),
+        FilledButton(
+          onPressed: _saveComment,
+          child: const Text('Save Comment'),
+        ),
       ],
     );
   }
@@ -334,11 +486,12 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
             padding: const EdgeInsets.only(top: 8),
             child: OutlinedButton.icon(
               onPressed: () => setState(() => _showFullLogs = !_showFullLogs),
-              icon: Icon(
-                  _showFullLogs ? Icons.compress : Icons.expand),
-              label: Text(_showFullLogs
-                  ? 'Show truncated (512 KB)'
-                  : 'Show full logs (${(fullLogs.length / 1024).toStringAsFixed(0)} KB)'),
+              icon: Icon(_showFullLogs ? Icons.compress : Icons.expand),
+              label: Text(
+                _showFullLogs
+                    ? 'Show truncated (512 KB)'
+                    : 'Show full logs (${(fullLogs.length / 1024).toStringAsFixed(0)} KB)',
+              ),
             ),
           ),
       ],
