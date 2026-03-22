@@ -3,8 +3,6 @@ description: TinkerPlex Labs mobile issue triage tool
 publish_to: 'none'
 version: 0.1.0+1
 
-resolution: workspace
-
 environment:
   sdk: ^3.6.0
 
@@ -19,6 +17,7 @@ dependencies:
   # Auth / Secure Storage
   flutter_secure_storage: ^10.0.0
   shared_preferences: ^2.2.0
+  google_sign_in: ^6.2.1
 
   # State management
   provider: ^6.1.0

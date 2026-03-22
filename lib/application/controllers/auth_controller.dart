@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:issueinator/domain/models/app_user.dart';
 import 'package:issueinator/domain/models/github_token_data.dart';
 import 'package:issueinator/domain/services/github_auth_service.dart';
@@ -14,6 +16,8 @@ class AuthController extends ChangeNotifier {
   bool _isGitHubAuthenticated = false;
   DeviceFlowChallenge? _currentChallenge;
   StreamSubscription<DeviceFlowResult>? _pollSubscription;
+
+  final _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
 
   AppUser? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
@@ -41,13 +45,31 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> signInAnonymously() async {
+  Future<void> signInWithGoogle() async {
     _isLoading = true;
     notifyListeners();
     try {
-      await SupabaseConfig.client.auth.signInAnonymously();
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        // User cancelled — not an error
+        return;
+      }
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+      if (idToken == null) throw Exception('No ID token from Google Sign-In');
+
+      await SupabaseConfig.client.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        accessToken: googleAuth.accessToken,
+      );
+      // AuthGate's StreamBuilder on onAuthStateChange handles navigation automatically
+      final userId = SupabaseConfig.client.auth.currentUser?.id;
+      const adminUuid = '65ad7649-f551-4dc2-b6a4-f7a105b73d06';
+      devLog('[AuthController] Signed in as: $userId (admin: ${userId == adminUuid})');
     } catch (e) {
-      devLog('[AuthController] signInAnonymously error: $e');
+      devLog('[AuthController] signInWithGoogle error: $e');
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -56,6 +78,7 @@ class AuthController extends ChangeNotifier {
 
   Future<void> signOut() async {
     await SupabaseConfig.client.auth.signOut();
+    await _googleSignIn.signOut();
   }
 
   // GitHub auth methods (Plan 01-03)
