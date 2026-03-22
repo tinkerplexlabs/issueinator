@@ -44,7 +44,12 @@ Plans:
   3. The report list loads without noticeable lag (screenshot_base64 is not fetched in list queries)
   4. Developer can pull-to-refresh the list to see newly submitted reports
   5. Tapping a report opens full detail including logs, device info, and an inline zoomable screenshot
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Domain models, BugReportRepository, controllers, and DI registration
+- [ ] 02-02-PLAN.md — Dashboard HomeScreen rewrite with product counts + ReportListScreen with pull-to-refresh
+- [ ] 02-03-PLAN.md — ReportDetailScreen with zoomable screenshot + end-to-end device verification
 
 ### Phase 3: Triage Actions
 **Goal**: Developer can categorize and annotate every report so nothing is left unprocessed
@@ -77,6 +82,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Auth Foundation | 2/2 | Complete | 2026-03-22 |
-| 2. Bug Report Read Path | 0/? | Not started | - |
+| 2. Bug Report Read Path | 0/3 | Not started | - |
 | 3. Triage Actions | 0/? | Not started | - |
 | 4. GitHub Sync | 0/? | Not started | - |
