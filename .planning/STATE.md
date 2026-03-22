@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 ## Current Position
 
 Phase: 4 of 4 (GitHub Sync) — In Progress
-Plan: 1 of 3 in current phase (04-01 complete)
-Status: Phase 4 Plan 1 complete — GitHub sync backend: SyncResult, GitHubSyncService, SyncController wired in DI; no UI yet (04-02 next)
-Last activity: 2026-03-22 — 04-01 complete: SHA-256 hash dedup via GraphQL, Supabase screenshot upload, REST issue creation, SyncController with double-tap guard
+Plan: 2 of 3 in current phase (04-02 complete, checkpoint:human-verify pending)
+Status: Phase 4 Plan 2 complete — Sync UI wired: button, result SnackBars, 401 re-auth, list badge; awaiting device verification
+Last activity: 2026-03-22 — 04-02 complete: sync button on issue-tagged reports, SyncResult switch, Device Flow re-auth, synced badge on list items
 
-Progress: [█████████░] ~75% (9 plans complete)
+Progress: [█████████░] ~80% (10 plans complete)
 
 ## Performance Metrics
 
@@ -37,6 +37,7 @@ Progress: [█████████░] ~75% (9 plans complete)
 
 *Updated after each plan completion*
 | Phase 04-github-sync P01 | 2 | 2 tasks | 6 files |
+| Phase 04-github-sync P02 | 1 | 1 task | 2 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,7 @@ Recent decisions affecting current work:
 - [Phase 04-github-sync]: html_url from REST issue create response (not url) — url is API URL, html_url is web URL
 - [Phase 04-github-sync]: Screenshot upload is non-fatal — sync proceeds without screenshot if upload fails
 - [Phase 04-github-sync]: 401 on any GitHub API call triggers revokeToken() + requiresReAuth: true
+- [04-02]: Capture Navigator.of(context) before await for Device Flow sheet — avoids use_build_context_synchronously lint error; use navigator.context to open modal after async gap
 
 ### Pending Todos
 
@@ -86,5 +88,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-22
-Stopped at: Completed 04-01-PLAN.md — GitHub sync backend complete: SyncResult model, GitHubSyncService impl, SyncController wired; ready for 04-02 (sync UI)
+Stopped at: Completed 04-02-PLAN.md — Sync UI complete; awaiting checkpoint:human-verify on device before 04-03
 Resume file: None

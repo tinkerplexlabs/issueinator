@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Auth Foundation** - Replace anonymous auth with Google Sign-In so RLS grants bug_reports access
 - [x] **Phase 2: Bug Report Read Path** - Dashboard summary, filterable report list, and full detail view with screenshots (completed 2026-03-22)
 - [ ] **Phase 3: Triage Actions** - Tag reports, add comments, batch-tag multiple reports
-- [ ] **Phase 4: GitHub Sync** - Push "issue"-tagged reports to the correct GitHub repo with dedup protection
+- [x] **Phase 4: GitHub Sync** - Push "issue"-tagged reports to the correct GitHub repo with dedup protection (completed 2026-03-22)
 
 ## Phase Details
 
@@ -93,4 +93,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Auth Foundation | 2/2 | Complete | 2026-03-22 |
 | 2. Bug Report Read Path | 3/3 | Complete   | 2026-03-22 |
 | 3. Triage Actions | 3/3 | Complete | 2026-03-22 |
-| 4. GitHub Sync | 0/2 | Not started | - |
+| 4. GitHub Sync | 2/2 | Complete   | 2026-03-22 |
