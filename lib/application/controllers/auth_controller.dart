@@ -19,9 +19,12 @@ class AuthController extends ChangeNotifier {
 
   final _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
 
+  static const adminUuid = 'a672276e-b2bd-403e-912c-040251c1063f';
+
   AppUser? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _currentUser != null;
+  bool get isAdmin => _currentUser?.id == adminUuid;
   bool get isGitHubAuthenticated => _isGitHubAuthenticated;
   DeviceFlowChallenge? get currentChallenge => _currentChallenge;
 
@@ -65,7 +68,6 @@ class AuthController extends ChangeNotifier {
       );
       // AuthGate's StreamBuilder on onAuthStateChange handles navigation automatically
       final userId = SupabaseConfig.client.auth.currentUser?.id;
-      const adminUuid = '65ad7649-f551-4dc2-b6a4-f7a105b73d06';
       devLog('[AuthController] Signed in as: $userId (admin: ${userId == adminUuid})');
     } catch (e) {
       devLog('[AuthController] signInWithGoogle error: $e');

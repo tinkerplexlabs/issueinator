@@ -71,74 +71,99 @@ class _ReportListScreenState extends State<ReportListScreen> {
               itemBuilder: (context, index) {
                 final report = controller.reports[index];
                 final isSynced = report.githubIssueUrl != null;
+                final isUnprocessed = !isSynced;
                 // Phase 2 proxy: replace with triage tag display in Phase 3
-                final triageColor = isSynced ? Colors.green : Colors.grey;
+                final triageColor =
+                    isSynced ? Colors.green : Colors.deepOrange;
                 final triageIcon =
-                    isSynced ? Icons.sync : Icons.hourglass_empty;
+                    isSynced ? Icons.sync : Icons.error_outline;
                 final triageLabel = isSynced ? 'Synced' : 'Unprocessed';
 
-                return ListTile(
-                  title: Text(
-                    report.descriptionPreview,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          if (report.platform != null) ...[
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(4),
+                return Container(
+                  color: isUnprocessed
+                      ? const Color(0xFF3D2E1E)
+                      : null,
+                  child: ListTile(
+                    title: Text(
+                      report.descriptionPreview,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: isUnprocessed
+                          ? Theme.of(context)
+                              .textTheme
+                              .bodyLarge
+                              ?.copyWith(fontWeight: FontWeight.bold)
+                          : null,
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            if (report.platform != null) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: isUnprocessed
+                                      ? Colors.deepOrange.withAlpha(60)
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHighest,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  report.platform!,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelSmall
+                                      ?.copyWith(
+                                        fontWeight: isUnprocessed
+                                            ? FontWeight.bold
+                                            : null,
+                                      ),
+                                ),
                               ),
-                              child: Text(
-                                report.platform!,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall,
-                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            Text(
+                              DateFormat('MMM d, yyyy')
+                                  .format(report.createdAt),
+                              style: Theme.of(context).textTheme.bodySmall,
                             ),
-                            const SizedBox(width: 8),
                           ],
-                          Text(
-                            DateFormat('MMM d, yyyy').format(report.createdAt),
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(triageIcon, size: 16, color: triageColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          triageLabel,
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: triageColor,
+                                    fontWeight: isUnprocessed
+                                        ? FontWeight.bold
+                                        : null,
+                                  ),
+                        ),
+                      ],
+                    ),
+                    isThreeLine: report.platform != null,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              ReportDetailScreen(reportId: report.id),
+                        ),
+                      );
+                    },
                   ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(triageIcon, size: 16, color: triageColor),
-                      const SizedBox(width: 4),
-                      Text(
-                        triageLabel,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: triageColor,
-                            ),
-                      ),
-                    ],
-                  ),
-                  isThreeLine: report.platform != null,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            ReportDetailScreen(reportId: report.id),
-                      ),
-                    );
-                  },
                 );
               },
             ),

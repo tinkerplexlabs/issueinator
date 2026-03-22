@@ -99,6 +99,43 @@ class _HomeScreenState extends State<HomeScreen> {
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Admin account indicator
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      color: auth.isAdmin
+                          ? Colors.green.withAlpha(30)
+                          : Colors.red.withAlpha(30),
+                      child: Row(
+                        children: [
+                          Icon(
+                            auth.isAdmin
+                                ? Icons.admin_panel_settings
+                                : Icons.warning_amber_rounded,
+                            size: 18,
+                            color:
+                                auth.isAdmin ? Colors.green : Colors.red,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              auth.isAdmin
+                                  ? 'Signed in as admin (${auth.currentUser?.email ?? auth.currentUser?.id})'
+                                  : 'Not signed in as admin — bug reports will not load. Sign out and use the admin account.',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: auth.isAdmin
+                                        ? Colors.green
+                                        : Colors.red,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                     // GitHub Integration section (preserved from original)
                     Padding(
                       padding: const EdgeInsets.symmetric(
@@ -186,6 +223,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: Text('No products found'));
                           }
 
+                          final isAdmin =
+                              GetIt.instance<AuthController>().isAdmin;
+
                           return ListView.builder(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 8),
@@ -196,23 +236,32 @@ class _HomeScreenState extends State<HomeScreen> {
                               final displayName = name.isNotEmpty
                                   ? '${name[0].toUpperCase()}${name.substring(1)}'
                                   : name;
-                              final hasUnprocessed = count.unprocessedCount > 0;
+                              final hasUnprocessed =
+                                  isAdmin && count.unprocessedCount > 0;
 
                               return Card(
                                 margin:
                                     const EdgeInsets.symmetric(vertical: 6),
+                                color: hasUnprocessed
+                                    ? const Color(0xFF3D2E1E)
+                                    : null,
+                                elevation: hasUnprocessed ? 3 : 1,
                                 child: InkWell(
                                   borderRadius: BorderRadius.circular(12),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => ReportListScreen(
-                                          productName: count.productName,
-                                        ),
-                                      ),
-                                    );
-                                  },
+                                  onTap: isAdmin
+                                      ? () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  ReportListScreen(
+                                                productName:
+                                                    count.productName,
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      : null,
                                   child: Padding(
                                     padding: const EdgeInsets.all(16),
                                     child: Row(
@@ -226,11 +275,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 displayName,
                                                 style: Theme.of(context)
                                                     .textTheme
-                                                    .titleMedium,
+                                                    .titleMedium
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          hasUnprocessed
+                                                              ? FontWeight
+                                                                  .bold
+                                                              : null,
+                                                    ),
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
-                                                '${count.totalCount} report${count.totalCount == 1 ? '' : 's'}',
+                                                isAdmin
+                                                    ? '${count.totalCount} report${count.totalCount == 1 ? '' : 's'}'
+                                                    : '— reports',
                                                 style: Theme.of(context)
                                                     .textTheme
                                                     .bodyMedium,
@@ -242,9 +300,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 10, vertical: 4),
                                           decoration: BoxDecoration(
-                                            color: hasUnprocessed
-                                                ? Colors.orange.withAlpha(30)
-                                                : Colors.green.withAlpha(30),
+                                            color: isAdmin
+                                                ? (hasUnprocessed
+                                                    ? Colors.orange
+                                                        .withAlpha(30)
+                                                    : Colors.green
+                                                        .withAlpha(30))
+                                                : Colors.grey.withAlpha(30),
                                             borderRadius:
                                                 BorderRadius.circular(12),
                                           ),
@@ -252,24 +314,40 @@ class _HomeScreenState extends State<HomeScreen> {
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               Icon(
-                                                hasUnprocessed
-                                                    ? Icons.pending_outlined
-                                                    : Icons.check_circle_outline,
+                                                isAdmin
+                                                    ? (hasUnprocessed
+                                                        ? Icons
+                                                            .pending_outlined
+                                                        : Icons
+                                                            .check_circle_outline)
+                                                    : Icons.lock_outline,
                                                 size: 16,
-                                                color: hasUnprocessed
-                                                    ? Colors.orange
-                                                    : Colors.green,
+                                                color: isAdmin
+                                                    ? (hasUnprocessed
+                                                        ? Colors.orange
+                                                        : Colors.green)
+                                                    : Colors.grey,
                                               ),
                                               const SizedBox(width: 4),
                                               Text(
-                                                '${count.unprocessedCount} unprocessed',
+                                                isAdmin
+                                                    ? '${count.unprocessedCount} unprocessed'
+                                                    : '—',
                                                 style: Theme.of(context)
                                                     .textTheme
                                                     .bodySmall
                                                     ?.copyWith(
-                                                      color: hasUnprocessed
-                                                          ? Colors.orange
-                                                          : Colors.green,
+                                                      color: isAdmin
+                                                          ? (hasUnprocessed
+                                                              ? Colors
+                                                                  .deepOrange
+                                                              : Colors.green)
+                                                          : Colors.grey,
+                                                      fontWeight:
+                                                          hasUnprocessed
+                                                              ? FontWeight
+                                                                  .bold
+                                                              : null,
                                                     ),
                                               ),
                                             ],

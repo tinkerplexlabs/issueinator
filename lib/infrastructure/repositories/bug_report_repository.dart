@@ -59,16 +59,28 @@ class BugReportRepository {
     return rows.map((row) => BugReportSummary.fromJson(row)).toList();
   }
 
-  /// Returns the full bug report detail including screenshot_base64.
-  ///
-  /// Only call this for single-record detail view — NOT in list queries.
+  /// Returns bug report detail WITHOUT screenshot_base64.
+  /// Use [getReportScreenshot] to fetch the screenshot separately.
   Future<BugReportDetail> getReportDetail(String reportId) async {
     final row = await SupabaseConfig.client
         .from('bug_reports')
-        .select('*')
+        .select(
+          'id, description, app_version, platform, created_at, github_issue_url, source_app, device_info, logs, user_id',
+        )
         .eq('id', reportId)
         .single();
 
     return BugReportDetail.fromJson(row);
+  }
+
+  /// Returns the screenshot_base64 string for a single report, or null.
+  Future<String?> getReportScreenshot(String reportId) async {
+    final row = await SupabaseConfig.client
+        .from('bug_reports')
+        .select('screenshot_base64')
+        .eq('id', reportId)
+        .single();
+
+    return row['screenshot_base64'] as String?;
   }
 }

@@ -1,6 +1,5 @@
 import 'dart:convert';
-import 'dart:typed_data';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
@@ -22,7 +21,12 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   BugReportDetail? _detail;
   bool _isLoading = true;
   String? _error;
-  Future<Uint8List>? _screenshotFuture;
+  Uint8List? _screenshotBytes;
+  bool _screenshotLoading = false;
+  bool _showFullLogs = false;
+
+  /// 512 KB log truncation limit
+  static const int _logTruncateBytes = 512 * 1024;
 
   @override
   void initState() {
@@ -37,19 +41,13 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     });
 
     try {
-      final detail = await GetIt.instance<BugReportRepository>()
-          .getReportDetail(widget.reportId);
+      final repo = GetIt.instance<BugReportRepository>();
+      final detail = await repo.getReportDetail(widget.reportId);
 
       if (mounted) {
         setState(() {
           _detail = detail;
           _isLoading = false;
-          if (detail.screenshotBase64 != null) {
-            // Decode async to avoid blocking UI thread
-            _screenshotFuture = Future.microtask(
-              () => base64Decode(detail.screenshotBase64!),
-            );
-          }
         });
       }
     } catch (e) {
@@ -59,6 +57,26 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _loadScreenshot(BugReportRepository repo) async {
+    setState(() => _screenshotLoading = true);
+    try {
+      final b64 = await repo.getReportScreenshot(widget.reportId);
+      if (b64 != null && mounted) {
+        final bytes = await compute(base64Decode, b64);
+        if (mounted) {
+          setState(() {
+            _screenshotBytes = bytes;
+            _screenshotLoading = false;
+          });
+        }
+      } else if (mounted) {
+        setState(() => _screenshotLoading = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _screenshotLoading = false);
     }
   }
 
@@ -239,35 +257,89 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
 
   Widget _buildLogs(BuildContext context, BugReportDetail detail) {
     final hasLogs = detail.logs != null && detail.logs!.isNotEmpty;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Logs', style: Theme.of(context).textTheme.titleSmall),
-        const SizedBox(height: 8),
-        if (hasLogs)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E1E1E),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: SelectableText(
-              detail.logs!,
-              style: const TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 12,
-                color: Color(0xFFD4D4D4),
-              ),
-            ),
-          )
-        else
+    if (!hasLogs) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Logs', style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: 8),
           Text(
             'No logs available',
             style: Theme.of(context)
                 .textTheme
                 .bodySmall
                 ?.copyWith(color: Colors.grey),
+          ),
+        ],
+      );
+    }
+
+    final fullLogs = detail.logs!;
+    final isOversized = fullLogs.length > _logTruncateBytes;
+    final displayLogs = _showFullLogs || !isOversized
+        ? fullLogs
+        : fullLogs.substring(fullLogs.length - _logTruncateBytes);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text('Logs', style: Theme.of(context).textTheme.titleSmall),
+            if (isOversized) ...[
+              const SizedBox(width: 8),
+              Text(
+                '(${(fullLogs.length / 1024).toStringAsFixed(0)} KB)',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: Colors.grey),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (isOversized && !_showFullLogs)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              'Showing last 512 KB of ${(fullLogs.length / 1024).toStringAsFixed(0)} KB',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: Colors.orange),
+            ),
+          ),
+        Container(
+          width: double.infinity,
+          constraints: const BoxConstraints(maxHeight: 400),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E1E1E),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: SingleChildScrollView(
+            child: SelectableText(
+              displayLogs,
+              style: const TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 12,
+                color: Color(0xFFD4D4D4),
+              ),
+            ),
+          ),
+        ),
+        if (isOversized)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: OutlinedButton.icon(
+              onPressed: () => setState(() => _showFullLogs = !_showFullLogs),
+              icon: Icon(
+                  _showFullLogs ? Icons.compress : Icons.expand),
+              label: Text(_showFullLogs
+                  ? 'Show truncated (512 KB)'
+                  : 'Show full logs (${(fullLogs.length / 1024).toStringAsFixed(0)} KB)'),
+            ),
           ),
       ],
     );
@@ -279,37 +351,46 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       children: [
         Text('Screenshot', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
-        if (_screenshotFuture != null)
-          FutureBuilder<Uint8List>(
-            future: _screenshotFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (snapshot.hasError) {
-                return Text(
-                  'Failed to decode screenshot: ${snapshot.error}',
-                  style: const TextStyle(color: Colors.red),
-                );
-              }
-              if (snapshot.hasData) {
-                return ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 400),
-                  child: InteractiveViewer(
-                    child: Image.memory(snapshot.data!),
+        if (_screenshotBytes != null)
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 400),
+            child: InteractiveViewer(
+              child: Image.memory(_screenshotBytes!),
+            ),
+          )
+        else if (_screenshotLoading)
+          Container(
+            height: 200,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
+                  SizedBox(height: 8),
+                  Text('Loading screenshot...',
+                      style: TextStyle(color: Colors.grey)),
+                ],
+              ),
+            ),
           )
         else
-          Text(
-            'No screenshot available',
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: Colors.grey),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () =>
+                  _loadScreenshot(GetIt.instance<BugReportRepository>()),
+              icon: const Icon(Icons.image_outlined),
+              label: const Text('Load screenshot'),
+            ),
           ),
       ],
     );
