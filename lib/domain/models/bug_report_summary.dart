@@ -7,6 +7,9 @@ class BugReportSummary {
   final String? githubIssueUrl;
   final String sourceApp;
 
+  /// Populated from a parallel triage fetch — NOT from bug_reports columns.
+  final String? triageTag;
+
   const BugReportSummary({
     required this.id,
     required this.description,
@@ -15,6 +18,7 @@ class BugReportSummary {
     required this.createdAt,
     this.githubIssueUrl,
     required this.sourceApp,
+    this.triageTag,
   });
 
   factory BugReportSummary.fromJson(Map<String, dynamic> json) {
@@ -26,6 +30,20 @@ class BugReportSummary {
       createdAt: DateTime.parse(json['created_at'] as String),
       githubIssueUrl: json['github_issue_url'] as String?,
       sourceApp: json['source_app'] as String,
+      // triageTag is not populated from JSON — comes from parallel triage fetch
+    );
+  }
+
+  BugReportSummary copyWith({String? triageTag}) {
+    return BugReportSummary(
+      id: id,
+      description: description,
+      appVersion: appVersion,
+      platform: platform,
+      createdAt: createdAt,
+      githubIssueUrl: githubIssueUrl,
+      sourceApp: sourceApp,
+      triageTag: triageTag ?? this.triageTag,
     );
   }
 

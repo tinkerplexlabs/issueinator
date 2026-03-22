@@ -1,17 +1,29 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:issueinator/domain/models/bug_report_detail.dart';
 import 'package:issueinator/domain/models/bug_report_summary.dart';
+import 'package:issueinator/domain/models/bug_report_triage.dart';
 import 'package:issueinator/domain/models/product_report_count.dart';
 import 'package:issueinator/infrastructure/services/supabase_config.dart';
 
 class BugReportRepository {
-  /// Returns per-product total and unprocessed (no GitHub issue) counts.
+  /// Returns per-product total and unprocessed counts.
   ///
-  /// "Unprocessed" in Phase 2 is proxied by github_issue_url IS NULL.
-  /// Phase 2 proxy: replace with triage_tag IS NULL in Phase 3.
+  /// "Unprocessed" = no triage_tag in bug_report_triage for that report.
+  /// Uses parallel fetch: product IDs + triaged IDs, then set difference.
   Future<List<ProductReportCount>> getProductCounts(
     List<String> productNames,
   ) async {
+    // Fetch all triaged report_ids (with non-null triage_tag) across all products.
+    // bug_report_triage is expected to be small (one row per triaged report).
+    final triagedResponse = await SupabaseConfig.client
+        .from('bug_report_triage')
+        .select('report_id')
+        .not('triage_tag', 'is', null);
+    final triagedIds =
+        (triagedResponse as List)
+            .map((r) => r['report_id'] as String)
+            .toSet();
+
     final results = <ProductReportCount>[];
 
     for (final name in productNames) {
@@ -21,19 +33,23 @@ class BugReportRepository {
           .eq('source_app', name)
           .count(CountOption.exact);
 
-      // Phase 2 proxy: replace with triage_tag IS NULL in Phase 3
-      final unprocessedResponse = await SupabaseConfig.client
+      // Fetch all report IDs for this product to compute unprocessed count.
+      final productIdsResponse = await SupabaseConfig.client
           .from('bug_reports')
           .select('id')
-          .eq('source_app', name)
-          .isFilter('github_issue_url', null)
-          .count(CountOption.exact);
+          .eq('source_app', name);
+      final productIds =
+          (productIdsResponse as List)
+              .map((r) => r['id'] as String)
+              .toSet();
+
+      final unprocessedCount = productIds.difference(triagedIds).length;
 
       results.add(
         ProductReportCount(
           productName: name,
           totalCount: totalResponse.count,
-          unprocessedCount: unprocessedResponse.count,
+          unprocessedCount: unprocessedCount,
         ),
       );
     }
@@ -41,22 +57,42 @@ class BugReportRepository {
     return results;
   }
 
-  /// Returns a column-projected list of bug reports for [productName].
+  /// Returns a column-projected list of bug reports for [productName],
+  /// enriched with triage data from a parallel fetch.
   ///
   /// CRITICAL: screenshot_base64 is intentionally excluded — it averages
   /// 166–350 KB per row. Use getReportDetail() to fetch the full record.
   Future<List<BugReportSummary>> getReportsByProduct(
     String productName,
   ) async {
-    final rows = await SupabaseConfig.client
-        .from('bug_reports')
-        .select(
-          'id, description, app_version, platform, created_at, github_issue_url, source_app',
-        )
-        .eq('source_app', productName)
-        .order('created_at', ascending: false);
+    // Parallel fetch: bug_reports + all triage rows
+    final results = await Future.wait([
+      SupabaseConfig.client
+          .from('bug_reports')
+          .select(
+            'id, description, app_version, platform, created_at, github_issue_url, source_app',
+          )
+          .eq('source_app', productName)
+          .order('created_at', ascending: false),
+      SupabaseConfig.client
+          .from('bug_report_triage')
+          .select('report_id, triage_tag'),
+    ]);
 
-    return rows.map((row) => BugReportSummary.fromJson(row)).toList();
+    final rows = results[0] as List<dynamic>;
+    final triagedRows = results[1] as List<dynamic>;
+
+    // Build triage lookup map keyed by report_id
+    final triageMap = <String, String?>{};
+    for (final t in triagedRows) {
+      triageMap[t['report_id'] as String] = t['triage_tag'] as String?;
+    }
+
+    return rows.map((row) {
+      final summary = BugReportSummary.fromJson(row as Map<String, dynamic>);
+      final tag = triageMap[summary.id];
+      return tag != null ? summary.copyWith(triageTag: tag) : summary;
+    }).toList();
   }
 
   /// Returns bug report detail WITHOUT screenshot_base64.
@@ -82,5 +118,60 @@ class BugReportRepository {
         .single();
 
     return row['screenshot_base64'] as String?;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Triage methods
+  // ---------------------------------------------------------------------------
+
+  /// Upserts a triage record for [reportId].
+  ///
+  /// Pass [tag] and/or [comment] — only non-null values are written.
+  /// Always updates [updated_at].
+  Future<void> saveTriage(
+    String reportId, {
+    String? tag,
+    String? comment,
+  }) async {
+    await SupabaseConfig.client.from('bug_report_triage').upsert(
+      {
+        'report_id': reportId,
+        if (tag != null) 'triage_tag': tag,
+        if (comment != null) 'comment': comment,
+        'updated_at': DateTime.now().toIso8601String(),
+      },
+      onConflict: 'report_id',
+    );
+  }
+
+  /// Returns the triage record for [reportId], or null if none exists.
+  Future<BugReportTriage?> getTriageForReport(String reportId) async {
+    final rows = await SupabaseConfig.client
+        .from('bug_report_triage')
+        .select('report_id, triage_tag, comment, updated_at')
+        .eq('report_id', reportId);
+
+    final list = rows as List;
+    if (list.isEmpty) return null;
+    return BugReportTriage.fromJson(list.first as Map<String, dynamic>);
+  }
+
+  /// Batch-upserts [tag] for all [reportIds] in a single Supabase call.
+  Future<void> batchSaveTriage(List<String> reportIds, String tag) async {
+    final now = DateTime.now().toIso8601String();
+    final rows =
+        reportIds
+            .map(
+              (id) => {
+                'report_id': id,
+                'triage_tag': tag,
+                'updated_at': now,
+              },
+            )
+            .toList();
+
+    await SupabaseConfig.client
+        .from('bug_report_triage')
+        .upsert(rows, onConflict: 'report_id');
   }
 }

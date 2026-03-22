@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:issueinator/application/controllers/auth_controller.dart';
 import 'package:issueinator/application/controllers/dashboard_controller.dart';
 import 'package:issueinator/application/controllers/report_list_controller.dart';
+import 'package:issueinator/application/controllers/triage_controller.dart';
 import 'package:issueinator/domain/services/github_auth_service.dart';
 import 'package:issueinator/infrastructure/persistence/local_storage.dart';
 import 'package:issueinator/infrastructure/repositories/bug_report_repository.dart';
@@ -30,5 +31,10 @@ Future<void> configureDependencies() async {
   // Report list controller (per-product report list)
   getIt.registerSingleton<ReportListController>(
     ReportListController(getIt<BugReportRepository>()),
+  );
+
+  // Triage controller (write triage tags and comments)
+  getIt.registerSingleton<TriageController>(
+    TriageController(getIt<BugReportRepository>()),
   );
 }
