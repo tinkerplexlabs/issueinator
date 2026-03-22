@@ -25,9 +25,9 @@
 
 ### Report Detail
 
-- [ ] **DETL-01**: Developer can tap a report to see full detail: description, device_info, app_version, platform, logs
-- [ ] **DETL-02**: Developer can view screenshot rendered from base64 (decoded only in detail view)
-- [ ] **DETL-03**: Report detail shows current triage tag and GitHub issue link if synced
+- [x] **DETL-01**: Developer can tap a report to see full detail: description, device_info, app_version, platform, logs
+- [x] **DETL-02**: Developer can view screenshot rendered from base64 (decoded only in detail view)
+- [x] **DETL-03**: Report detail shows current triage tag and GitHub issue link if synced
 
 ### Triage
 
@@ -79,9 +79,9 @@
 | LIST-02 | Phase 2 | Complete |
 | LIST-03 | Phase 2 | Complete |
 | LIST-04 | Phase 2 | Complete |
-| DETL-01 | Phase 2 | Pending |
-| DETL-02 | Phase 2 | Pending |
-| DETL-03 | Phase 2 | Pending |
+| DETL-01 | Phase 2 | Complete |
+| DETL-02 | Phase 2 | Complete |
+| DETL-03 | Phase 2 | Complete |
 | TRIA-01 | Phase 3 | Pending |
 | TRIA-02 | Phase 3 | Pending |
 | TRIA-03 | Phase 3 | Pending |

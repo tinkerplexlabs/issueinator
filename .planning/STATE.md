@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 ## Current Position
 
 Phase: 2 of 4 (Bug Report Read Path)
-Plan: 2 of 3 in current phase (02-02 complete)
-Status: In progress
-Last activity: 2026-03-22 — 02-02 complete: HomeScreen dashboard and ReportListScreen with pull-to-refresh
+Plan: 3 of 3 in current phase (02-03 complete)
+Status: Phase 2 complete — ready for Phase 3
+Last activity: 2026-03-22 — 02-03 complete: ReportDetailScreen with zoomable screenshot, log truncation, admin banner; full read path verified on device
 
-Progress: [████░░░░░░] ~25% (4 plans complete)
+Progress: [█████░░░░░] ~38% (5 plans complete)
 
 ## Performance Metrics
 
@@ -28,10 +28,10 @@ Progress: [████░░░░░░] ~25% (4 plans complete)
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-auth-foundation | 2 | ~70 min | ~35 min |
-| 02-bug-report-read-path | 2 | ~3 min | ~1.5 min |
+| 02-bug-report-read-path | 3 | ~48 min | ~16 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (~25 min), 01-02 (~45 min)
+- Last 5 plans: 01-01 (~25 min), 01-02 (~45 min), 02-03 (~45 min)
 - Trend: baseline established
 
 *Updated after each plan completion*
@@ -55,6 +55,9 @@ Recent decisions affecting current work:
 - [02-01]: Unprocessed proxy for Phase 2 is github_issue_url IS NULL; comment placed in repository to replace with triage_tag in Phase 3
 - [02-02]: HomeScreen loads product names with select('name') then delegates to DashboardController.loadCounts() — screen owns name discovery, controller owns count logic
 - [02-02]: ReportDetailScreen navigation stubbed as SnackBar in 02-02; TODO(02-03) comment marks exact wiring point in report_list_screen.dart
+- [02-03]: Screenshot fetch split from metadata fetch — on-demand load + compute() decode on background isolate avoids jank on large images
+- [02-03]: Log truncation to last 512KB — prevents UI freeze on multi-MB log payloads; expand button reveals full content
+- [02-03]: Admin UUID updated to tinkertestautomation@gmail.com to match Supabase RLS policy
 
 ### Pending Todos
 
@@ -69,5 +72,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-22
-Stopped at: Completed 02-02-PLAN.md — HomeScreen dashboard and ReportListScreen complete; ready for plan 02-03 (ReportDetailScreen)
+Stopped at: Completed 02-03-PLAN.md — Phase 2 complete; ReportDetailScreen verified on device; ready for Phase 3 (triage write path)
 Resume file: None
