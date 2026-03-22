@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-21)
 
 **Core value:** Every bug report gets triaged — tagged, commented, and either synced to the right GitHub repo or dismissed with reason
-**Current focus:** Phase 3 — Triage Actions
+**Current focus:** Phase 4 — GitHub Sync
 
 ## Current Position
 
-Phase: 3 of 4 (Triage Actions)
-Plan: 2 of 3 in current phase (03-02 complete)
-Status: Phase 3 in progress — triage UI complete (tag picker, comment, duplicate exclusion, list display); ready for 03-03 (bulk triage)
-Last activity: 2026-03-22 — 03-02 complete: tag picker bottom sheet, comment field with persist, duplicate exclusion chip, list real triage tag display
+Phase: 3 of 4 (Triage Actions) — COMPLETE
+Plan: 3 of 3 in current phase (03-03 complete)
+Status: Phase 3 complete — full triage workflow verified on device (tag picker, comment, duplicate exclusion, list display, multi-select batch tag); ready for Phase 4 (GitHub Sync)
+Last activity: 2026-03-22 — 03-03 complete: multi-select mode, batch tag picker, PopScope back-button handling, cross-product selection leak prevention
 
-Progress: [███████░░░] ~58% (7 plans complete)
+Progress: [████████░░] ~67% (8 plans complete)
 
 ## Performance Metrics
 
@@ -29,10 +29,10 @@ Progress: [███████░░░] ~58% (7 plans complete)
 |-------|-------|-------|----------|
 | 01-auth-foundation | 2 | ~70 min | ~35 min |
 | 02-bug-report-read-path | 3 | ~48 min | ~16 min |
-| 03-triage-actions | 2 | ~4 min | ~2 min |
+| 03-triage-actions | 3 | ~14 min | ~5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (~25 min), 01-02 (~45 min), 02-03 (~45 min), 03-01 (~2 min), 03-02 (~2 min)
+- Last 5 plans: 02-03 (~45 min), 03-01 (~2 min), 03-02 (~2 min), 03-03 (~10 min)
 - Trend: fast execution on well-defined UI tasks
 
 *Updated after each plan completion*
@@ -65,6 +65,8 @@ Recent decisions affecting current work:
 - [03-02]: Capture ScaffoldMessenger before async gaps — lint requires context not used after await; store ref in local var before first await
 - [03-02]: Detail screen fetches triage sequentially after detail load in single _fetchDetail — simpler lifecycle, no separate triggers
 - [03-02]: List refresh uses Navigator.push(...).then((_) => controller.refresh()) — avoids BuildContext async gap, integrates with existing controller.refresh()
+- [Phase 03-triage-actions]: clearSelection called at start of loadReports to prevent cross-product selection leaks
+- [Phase 03-triage-actions]: PopScope(canPop: !isSelectionMode) replaces deprecated WillPopScope for back-button selection clear
 
 ### Pending Todos
 
@@ -79,5 +81,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-22
-Stopped at: Completed 03-02-PLAN.md — triage UI complete; tag picker bottom sheet, comment field, duplicate exclusion, list real triage tags; ready for 03-03 (bulk triage)
+Stopped at: Completed 03-03-PLAN.md — Phase 3 complete: full triage workflow verified on device; multi-select batch tag, PopScope back handling; ready for Phase 4 (GitHub Sync)
 Resume file: None
