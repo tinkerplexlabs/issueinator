@@ -156,6 +156,14 @@ class BugReportRepository {
     return BugReportTriage.fromJson(list.first as Map<String, dynamic>);
   }
 
+  /// Updates github_issue_url on the bug_reports table for [reportId].
+  Future<void> updateGithubIssueUrl(String reportId, String url) async {
+    await SupabaseConfig.client
+        .from('bug_reports')
+        .update({'github_issue_url': url})
+        .eq('id', reportId);
+  }
+
   /// Batch-upserts [tag] for all [reportIds] in a single Supabase call.
   Future<void> batchSaveTriage(List<String> reportIds, String tag) async {
     final now = DateTime.now().toIso8601String();
