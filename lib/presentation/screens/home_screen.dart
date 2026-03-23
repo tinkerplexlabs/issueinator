@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
 import 'package:issueinator/application/controllers/auth_controller.dart';
 import 'package:issueinator/application/controllers/dashboard_controller.dart';
@@ -69,9 +70,18 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('IssueInator'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: SvgPicture.asset(
+              'assets/images/logout-icon.svg',
+              width: 24,
+              height: 24,
+              colorFilter: ColorFilter.mode(
+                Theme.of(context).appBarTheme.foregroundColor ?? Colors.white,
+                BlendMode.srcIn,
+              ),
+            ),
             onPressed: () => auth.signOut(),
           ),
+          const SizedBox(width: 56),
         ],
       ),
       body: _loading
@@ -353,8 +363,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                             ],
                                           ),
                                         ),
-                                        const SizedBox(width: 8),
-                                        const Icon(Icons.chevron_right),
                                       ],
                                     ),
                                   ),

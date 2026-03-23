@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:issueinator/application/controllers/report_list_controller.dart';
 import 'package:issueinator/domain/models/bug_report_triage.dart';
 import 'package:issueinator/infrastructure/repositories/bug_report_repository.dart';
@@ -111,7 +113,15 @@ class _ReportListScreenState extends State<ReportListScreen> {
     if (controller.isSelectionMode) {
       return AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: SvgPicture.asset(
+            'assets/images/close-icon.svg',
+            width: 24,
+            height: 24,
+            colorFilter: ColorFilter.mode(
+              Theme.of(context).appBarTheme.foregroundColor ?? Colors.white,
+              BlendMode.srcIn,
+            ),
+          ),
           onPressed: () => controller.clearSelection(),
         ),
         title: Text('${controller.selectedCount} selected'),
@@ -131,7 +141,21 @@ class _ReportListScreenState extends State<ReportListScreen> {
       );
     }
 
-    return AppBar(title: Text(_displayName));
+    return AppBar(
+      leading: IconButton(
+        icon: SvgPicture.asset(
+          'assets/images/backarrow-icon.svg',
+          width: 24,
+          height: 24,
+          colorFilter: ColorFilter.mode(
+            Theme.of(context).appBarTheme.foregroundColor ?? Colors.white,
+            BlendMode.srcIn,
+          ),
+        ),
+        onPressed: () => Navigator.pop(context),
+      ),
+      title: Text(_displayName),
+    );
   }
 
   Widget _buildBody(BuildContext context, ReportListController controller) {
@@ -170,7 +194,8 @@ class _ReportListScreenState extends State<ReportListScreen> {
                 final report = controller.reports[index];
                 final triageTag = report.triageTag;
                 final hasTag = triageTag != null;
-                final isUnprocessed = !hasTag;
+                final isSynced = report.githubIssueUrl != null && !hasTag;
+                final isUnprocessed = !hasTag && !isSynced;
                 final isSelected = controller.selectedIds.contains(report.id);
 
                 // Determine display properties based on triage state
@@ -178,7 +203,11 @@ class _ReportListScreenState extends State<ReportListScreen> {
                 IconData triageIcon;
                 String triageLabel;
 
-                if (triageTag == null) {
+                if (triageTag == null && report.githubIssueUrl != null) {
+                  triageColor = Colors.teal;
+                  triageIcon = Icons.link;
+                  triageLabel = 'Synced';
+                } else if (triageTag == null) {
                   triageColor = Colors.deepOrange;
                   triageIcon = Icons.error_outline;
                   triageLabel = 'Unprocessed';
@@ -217,10 +246,12 @@ class _ReportListScreenState extends State<ReportListScreen> {
                           ? Theme.of(
                             context,
                           ).colorScheme.primaryContainer.withAlpha(80)
-                          : report.triageTag == null
+                          : isUnprocessed
                           ? const Color(0xFF3D2E1E)
                           : null,
-                  child: ListTile(
+                  child: Opacity(
+                    opacity: isSynced ? 0.5 : 1.0,
+                    child: ListTile(
                     leading:
                         controller.isSelectionMode
                             ? Checkbox(
@@ -281,31 +312,45 @@ class _ReportListScreenState extends State<ReportListScreen> {
                         ),
                       ],
                     ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(triageIcon, size: 16, color: triageColor),
-                        const SizedBox(width: 4),
-                        Text(
-                          triageLabel,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodySmall?.copyWith(
-                            color: triageColor,
-                            fontWeight:
-                                isUnprocessed ? FontWeight.bold : null,
+                    trailing: isSynced
+                        ? TextButton.icon(
+                            onPressed: () => launchUrl(
+                              Uri.parse(report.githubIssueUrl!),
+                              mode: LaunchMode.externalApplication,
+                            ),
+                            icon: const Icon(Icons.open_in_new, size: 14),
+                            label: const Text('GitHub'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.teal,
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          )
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(triageIcon, size: 16, color: triageColor),
+                              const SizedBox(width: 4),
+                              Text(
+                                triageLabel,
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.bodySmall?.copyWith(
+                                  color: triageColor,
+                                  fontWeight:
+                                      isUnprocessed ? FontWeight.bold : null,
+                                ),
+                              ),
+                              if (report.githubIssueUrl != null) ...[
+                                const SizedBox(width: 6),
+                                const Icon(
+                                  Icons.link,
+                                  size: 14,
+                                  color: Colors.green,
+                                ),
+                              ],
+                            ],
                           ),
-                        ),
-                        if (report.githubIssueUrl != null) ...[
-                          const SizedBox(width: 6),
-                          const Icon(
-                            Icons.link,
-                            size: 14,
-                            color: Colors.green,
-                          ),
-                        ],
-                      ],
-                    ),
                     isThreeLine: report.platform != null,
                     onLongPress: () {
                       if (!controller.isSelectionMode) {
@@ -315,6 +360,11 @@ class _ReportListScreenState extends State<ReportListScreen> {
                     onTap: () {
                       if (controller.isSelectionMode) {
                         controller.toggleSelection(report.id);
+                      } else if (isSynced && report.githubIssueUrl != null) {
+                        launchUrl(
+                          Uri.parse(report.githubIssueUrl!),
+                          mode: LaunchMode.externalApplication,
+                        );
                       } else {
                         Navigator.push(
                           context,
@@ -326,6 +376,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
                         ).then((_) => controller.refresh());
                       }
                     },
+                  ),
                   ),
                 );
               },

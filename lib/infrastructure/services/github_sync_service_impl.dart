@@ -18,15 +18,25 @@ class GitHubSyncServiceImpl implements GitHubSyncService {
 
   GitHubSyncServiceImpl(this._githubAuthService, this._repository);
 
-  /// Maps source_app identifiers to GitHub repos.
-  /// Must NOT be changed without updating the corresponding CLI tools.
-  static const Map<String, String> _repoMap = {
-    'freecell': 'tinkerplexlabs/freecell',
-    'puzzle_nook': 'tinkerplexlabs/puzzlenook',
-  };
+  /// Cached repo map loaded from the products table.
+  Map<String, String>? _repoMap;
+
+  /// Loads the source_app → github_repo mapping from the products table.
+  Future<Map<String, String>> _getRepoMap() async {
+    if (_repoMap != null) return _repoMap!;
+    final rows = await SupabaseConfig.client
+        .from('products')
+        .select('name, github_repo')
+        .not('github_repo', 'is', null);
+    _repoMap = {
+      for (final row in rows as List)
+        row['name'] as String: row['github_repo'] as String,
+    };
+    return _repoMap!;
+  }
 
   @override
-  String? repoForApp(String sourceApp) => _repoMap[sourceApp];
+  String? repoForApp(String sourceApp) => _repoMap?[sourceApp];
 
   @override
   Future<SyncResult> syncReport(String reportId, BugReportDetail detail) async {
@@ -37,7 +47,8 @@ class GitHubSyncServiceImpl implements GitHubSyncService {
     }
 
     // 2. Route to the correct GitHub repo based on source_app.
-    final repo = _repoMap[detail.sourceApp];
+    final repoMap = await _getRepoMap();
+    final repo = repoMap[detail.sourceApp];
     if (repo == null) {
       return SyncError('No GitHub repo mapped for "${detail.sourceApp}"');
     }

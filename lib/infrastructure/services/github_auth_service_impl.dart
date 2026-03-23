@@ -1,9 +1,9 @@
 import 'dart:convert';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:issueinator/core/dev_log.dart';
 import 'package:issueinator/domain/models/github_token_data.dart';
 import 'package:issueinator/domain/services/github_auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GitHubAuthServiceImpl implements GitHubAuthService {
   // Client ID from GitHub OAuth App (TinkerPlex IssueInator) — NOT a secret; safe to commit.
@@ -11,20 +11,17 @@ class GitHubAuthServiceImpl implements GitHubAuthService {
   static const String _clientId = 'Ov23li5YPIfifmTKFx3A';
   static const String _tokenKey = 'github_access_token';
 
-  final FlutterSecureStorage _secureStorage;
   bool _isAuthenticated = false;
-
-  GitHubAuthServiceImpl()
-      : _secureStorage = const FlutterSecureStorage(
-          aOptions: AndroidOptions(), // v10.0.0: uses AES_GCM_NoPadding cipher by default
-        );
 
   @override
   bool get isAuthenticated => _isAuthenticated;
 
+  Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
+
   @override
   Future<bool> validateStoredToken() async {
-    final token = await _secureStorage.read(key: _tokenKey);
+    final prefs = await _prefs;
+    final token = prefs.getString(_tokenKey);
     if (token == null) {
       devLog('[GitHubAuth] No stored token found');
       _isAuthenticated = false;
@@ -142,20 +139,23 @@ class GitHubAuthServiceImpl implements GitHubAuthService {
 
   @override
   Future<void> persistToken(String token) async {
-    await _secureStorage.write(key: _tokenKey, value: token);
+    final prefs = await _prefs;
+    await prefs.setString(_tokenKey, token);
     _isAuthenticated = true;
-    devLog('[GitHubAuth] Token persisted to Android Keystore');
+    devLog('[GitHubAuth] Token persisted');
   }
 
   @override
   Future<void> revokeToken() async {
-    await _secureStorage.delete(key: _tokenKey);
+    final prefs = await _prefs;
+    await prefs.remove(_tokenKey);
     _isAuthenticated = false;
     devLog('[GitHubAuth] Token revoked');
   }
 
   @override
   Future<String?> getStoredToken() async {
-    return _secureStorage.read(key: _tokenKey);
+    final prefs = await _prefs;
+    return prefs.getString(_tokenKey);
   }
 }

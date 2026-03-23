@@ -35,7 +35,15 @@ class ReportListController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _reports = await _repository.getReportsByProduct(productName);
+      final reports = await _repository.getReportsByProduct(productName);
+      // Sort: unprocessed first (no tag and no github URL), then by date desc.
+      reports.sort((a, b) {
+        final aUnprocessed = a.triageTag == null && a.githubIssueUrl == null;
+        final bUnprocessed = b.triageTag == null && b.githubIssueUrl == null;
+        if (aUnprocessed != bUnprocessed) return aUnprocessed ? -1 : 1;
+        return b.createdAt.compareTo(a.createdAt);
+      });
+      _reports = reports;
     } catch (e) {
       _error = e.toString();
     } finally {

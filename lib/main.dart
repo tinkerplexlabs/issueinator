@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:issueinator/config/dependencies.dart';
 import 'package:issueinator/infrastructure/services/supabase_config.dart';
+import 'package:issueinator/presentation/widgets/app_shell.dart';
 import 'package:issueinator/presentation/widgets/auth_gate.dart';
 
 Future<void> main() async {
@@ -17,6 +18,9 @@ class IssueInatorApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'IssueInator',
+      navigatorKey: AppShell.navigatorKey,
+      debugShowCheckedModeBanner: false,
+      builder: (context, child) => AppShell(child: child!),
       themeMode: ThemeMode.dark,
       darkTheme: ThemeData(
         brightness: Brightness.dark,

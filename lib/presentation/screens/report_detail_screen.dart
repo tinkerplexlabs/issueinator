@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -261,6 +262,18 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: SvgPicture.asset(
+            'assets/images/backarrow-icon.svg',
+            width: 24,
+            height: 24,
+            colorFilter: ColorFilter.mode(
+              Theme.of(context).appBarTheme.foregroundColor ?? Colors.white,
+              BlendMode.srcIn,
+            ),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(
           _detail != null
               ? 'Report ${widget.reportId.substring(0, 8)}…'
@@ -359,7 +372,9 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
             label: const Text('View GitHub Issue'),
             onPressed: () => _launchGitHubUrl(detail.githubIssueUrl!),
           )
-        else if (currentTag == TriageTag.issue)
+        else if (currentTag == TriageTag.issue ||
+            currentTag == TriageTag.feedback ||
+            currentTag == TriageTag.needsInfo)
           ListenableBuilder(
             listenable: _syncController,
             builder: (context, _) {

@@ -8,13 +8,12 @@ import 'package:issueinator/infrastructure/services/supabase_config.dart';
 class BugReportRepository {
   /// Returns per-product total and unprocessed counts.
   ///
-  /// "Unprocessed" = no triage_tag in bug_report_triage for that report.
-  /// Uses parallel fetch: product IDs + triaged IDs, then set difference.
+  /// "Processed" = has a triage_tag OR has a github_issue_url.
+  /// Uses parallel fetch: triaged IDs + per-product IDs, then set difference.
   Future<List<ProductReportCount>> getProductCounts(
     List<String> productNames,
   ) async {
     // Fetch all triaged report_ids (with non-null triage_tag) across all products.
-    // bug_report_triage is expected to be small (one row per triaged report).
     final triagedResponse = await SupabaseConfig.client
         .from('bug_report_triage')
         .select('report_id')
@@ -27,28 +26,24 @@ class BugReportRepository {
     final results = <ProductReportCount>[];
 
     for (final name in productNames) {
-      final totalResponse = await SupabaseConfig.client
+      // Fetch IDs and github_issue_url for this product.
+      final productResponse = await SupabaseConfig.client
           .from('bug_reports')
-          .select('id')
-          .eq('source_app', name)
-          .count(CountOption.exact);
-
-      // Fetch all report IDs for this product to compute unprocessed count.
-      final productIdsResponse = await SupabaseConfig.client
-          .from('bug_reports')
-          .select('id')
+          .select('id, github_issue_url')
           .eq('source_app', name);
-      final productIds =
-          (productIdsResponse as List)
-              .map((r) => r['id'] as String)
-              .toSet();
+      final productRows = productResponse as List;
 
-      final unprocessedCount = productIds.difference(triagedIds).length;
+      // A report is processed if it has a triage tag or a github_issue_url.
+      final unprocessedCount = productRows.where((r) {
+        final id = r['id'] as String;
+        final hasGithubUrl = r['github_issue_url'] != null;
+        return !triagedIds.contains(id) && !hasGithubUrl;
+      }).length;
 
       results.add(
         ProductReportCount(
           productName: name,
-          totalCount: totalResponse.count,
+          totalCount: productRows.length,
           unprocessedCount: unprocessedCount,
         ),
       );
