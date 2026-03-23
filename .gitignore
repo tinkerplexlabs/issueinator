@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Sensitive config files — kept in ~/.tinkerplex/
+android/app/google-services.json
+android/key.properties
+debug.log

@@ -85,6 +85,10 @@ jobs:
       run: |
         echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore-issueinator.p12
 
+    - name: Decode google-services.json
+      run: |
+        echo "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" | base64 --decode > android/app/google-services.json
+
     - name: Create key.properties
       run: |
         echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" > android/key.properties
