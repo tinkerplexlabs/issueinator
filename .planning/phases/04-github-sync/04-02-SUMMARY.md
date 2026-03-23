@@ -41,7 +41,7 @@ completed: 2026-03-22
 - **Duration:** ~1 min
 - **Started:** 2026-03-22T23:43:34Z
 - **Completed:** 2026-03-22T23:45:05Z
-- **Tasks:** 1 (+ 1 checkpoint reached)
+- **Tasks:** 2 (1 auto + 1 checkpoint:human-verify APPROVED)
 - **Files modified:** 2
 
 ## Accomplishments
@@ -54,6 +54,7 @@ completed: 2026-03-22
 ## Task Commits
 
 1. **Task 1: Sync button on detail screen + result handling + re-auth + list badge** - `d2a6bee` (feat)
+2. **Task 2: Device verification — end-to-end sync flow** - checkpoint:human-verify APPROVED
 
 **Plan metadata:** (docs commit — see below)
 
@@ -89,9 +90,9 @@ None beyond the async-gap lint fix above.
 None - no external service configuration required.
 
 ## Next Phase Readiness
-- Phase 4 (GitHub Sync) is feature-complete pending device verification (Task 2 checkpoint)
-- All 5 SYNC requirements (SYNC-01 through SYNC-05) implemented end-to-end
-- Ready for checkpoint:human-verify: developer to run on device, tap sync on issue-tagged report, verify GitHub issue created with correct body
+- Phase 4 (GitHub Sync) is feature-complete — device verification PASSED by user
+- All 5 SYNC requirements (SYNC-01 through SYNC-05) implemented and verified end-to-end on device
+- End-to-end verified: sync button, spinner, GitHub issue creation, dedup detection, re-auth on 401, synced badge on list items
 
 ---
 *Phase: 04-github-sync*
