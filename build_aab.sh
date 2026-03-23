@@ -8,6 +8,17 @@
 
 set -e
 
+# Ensure google-services.json is in place
+if [ ! -f "android/app/google-services.json" ]; then
+  if [ -f "setup_local.sh" ]; then
+    echo "google-services.json missing — running setup_local.sh..."
+    ./setup_local.sh
+  else
+    echo "ERROR: android/app/google-services.json not found"
+    exit 1
+  fi
+fi
+
 VERSION="${1:-}"
 
 # Generate timestamp-based version code (same algorithm as CI)

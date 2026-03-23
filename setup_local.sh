@@ -8,12 +8,12 @@ CONFIG_DIR="$HOME/.tinkerplex"
 
 if [ ! -d "$CONFIG_DIR" ]; then
   echo "ERROR: $CONFIG_DIR does not exist."
-  echo "Create it and add: google-services-issueinator.json"
+  echo "Create it and add: google-services.json"
   exit 1
 fi
 
-# google-services.json
-SRC="$CONFIG_DIR/google-services-issueinator.json"
+# google-services.json (shared across all TinkerPlex apps)
+SRC="$CONFIG_DIR/google-services.json"
 DEST="android/app/google-services.json"
 if [ -f "$SRC" ]; then
   cp "$SRC" "$DEST"
