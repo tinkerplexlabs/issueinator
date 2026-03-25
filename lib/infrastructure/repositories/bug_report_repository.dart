@@ -26,15 +26,20 @@ class BugReportRepository {
     final results = <ProductReportCount>[];
 
     for (final name in productNames) {
-      // Fetch IDs and github_issue_url for this product.
+      // Fetch IDs, github_issue_url, and github_issue_state for this product.
       final productResponse = await SupabaseConfig.client
           .from('bug_reports')
-          .select('id, github_issue_url')
+          .select('id, github_issue_url, github_issue_state')
           .eq('source_app', name);
       final productRows = productResponse as List;
 
+      // Exclude closed GitHub issues from counts entirely.
+      final activeRows = productRows.where(
+        (r) => r['github_issue_state'] != 'closed',
+      ).toList();
+
       // A report is processed if it has a triage tag or a github_issue_url.
-      final unprocessedCount = productRows.where((r) {
+      final unprocessedCount = activeRows.where((r) {
         final id = r['id'] as String;
         final hasGithubUrl = r['github_issue_url'] != null;
         return !triagedIds.contains(id) && !hasGithubUrl;
@@ -43,7 +48,7 @@ class BugReportRepository {
       results.add(
         ProductReportCount(
           productName: name,
-          totalCount: productRows.length,
+          totalCount: activeRows.length,
           unprocessedCount: unprocessedCount,
         ),
       );
@@ -65,7 +70,7 @@ class BugReportRepository {
       SupabaseConfig.client
           .from('bug_reports')
           .select(
-            'id, description, app_version, platform, created_at, github_issue_url, source_app',
+            'id, description, app_version, platform, created_at, github_issue_url, github_issue_state, source_app',
           )
           .eq('source_app', productName)
           .order('created_at', ascending: false),
@@ -176,5 +181,41 @@ class BugReportRepository {
     await SupabaseConfig.client
         .from('bug_report_triage')
         .upsert(rows, onConflict: 'report_id');
+  }
+
+  /// Updates github_issue_state for a single report.
+  Future<void> updateGithubIssueState(String reportId, String state) async {
+    await SupabaseConfig.client
+        .from('bug_reports')
+        .update({'github_issue_state': state})
+        .eq('id', reportId);
+  }
+
+  /// Returns all reports that have a github_issue_url but no cached state.
+  Future<List<Map<String, String>>> getUncachedGithubIssues() async {
+    final rows = await SupabaseConfig.client
+        .from('bug_reports')
+        .select('id, github_issue_url')
+        .not('github_issue_url', 'is', null)
+        .filter('github_issue_state', 'is', null);
+    return (rows as List).map((r) => {
+      'id': r['id'] as String,
+      'url': r['github_issue_url'] as String,
+    }).toList();
+  }
+
+  /// Deletes bug reports and their triage records by IDs.
+  Future<void> deleteReports(List<String> reportIds) async {
+    if (reportIds.isEmpty) return;
+    // Delete triage records first (foreign key dependency)
+    await SupabaseConfig.client
+        .from('bug_report_triage')
+        .delete()
+        .inFilter('report_id', reportIds);
+    // Delete the reports
+    await SupabaseConfig.client
+        .from('bug_reports')
+        .delete()
+        .inFilter('id', reportIds);
   }
 }

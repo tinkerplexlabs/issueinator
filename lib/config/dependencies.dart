@@ -28,12 +28,12 @@ Future<void> configureDependencies() async {
 
   // Dashboard controller (product counts)
   getIt.registerSingleton<DashboardController>(
-    DashboardController(getIt<BugReportRepository>()),
+    DashboardController(getIt<BugReportRepository>(), getIt<GitHubAuthService>()),
   );
 
   // Report list controller (per-product report list)
   getIt.registerSingleton<ReportListController>(
-    ReportListController(getIt<BugReportRepository>()),
+    ReportListController(getIt<BugReportRepository>(), getIt<GitHubAuthService>()),
   );
 
   // Triage controller (write triage tags and comments)

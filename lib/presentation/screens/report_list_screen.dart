@@ -85,6 +85,44 @@ class _ReportListScreenState extends State<ReportListScreen> {
     );
   }
 
+  Future<void> _cleanupNotBugs(
+    BuildContext context,
+    ReportListController controller,
+  ) async {
+    final notBugIds = controller.reports
+        .where((r) => r.triageTag == 'not-a-bug')
+        .map((r) => r.id)
+        .toList();
+
+    if (notBugIds.isEmpty) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cleanup not-a-bug reports'),
+        content: Text(
+          'This will permanently delete ${notBugIds.length} report${notBugIds.length == 1 ? '' : 's'} tagged as "not a bug".',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final repo = GetIt.instance<BugReportRepository>();
+    await repo.deleteReports(notBugIds);
+    await controller.refresh();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
@@ -383,6 +421,34 @@ class _ReportListScreenState extends State<ReportListScreen> {
             ),
           ),
         ),
+        // Cleanup bar — shown when there are 'not-a-bug' reports
+        if (!controller.isSelectionMode &&
+            controller.reports.any((r) => r.triageTag == 'not-a-bug'))
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainer,
+              boxShadow: const [
+                BoxShadow(blurRadius: 4, color: Colors.black26),
+              ],
+            ),
+            child: SafeArea(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${controller.reports.where((r) => r.triageTag == 'not-a-bug').length} not-a-bug reports',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () => _cleanupNotBugs(context, controller),
+                    icon: const Icon(Icons.delete_sweep, size: 18),
+                    label: const Text('Cleanup not bugs'),
+                  ),
+                ],
+              ),
+            ),
+          ),
         // Bottom action bar — shown when in selection mode with selections
         if (controller.isSelectionMode && controller.selectedCount > 0)
           Container(

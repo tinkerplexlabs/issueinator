@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:issueinator/core/dev_log.dart';
 import 'package:issueinator/domain/models/bug_report_detail.dart';
 import 'package:issueinator/domain/models/sync_result.dart';
 import 'package:issueinator/domain/services/github_auth_service.dart';
@@ -80,10 +81,21 @@ class GitHubSyncServiceImpl implements GitHubSyncService {
       screenshotUrl = await _uploadScreenshot(reportId, screenshotB64);
     }
 
-    // 6. Build issue title (first 80 chars of description, prefixed with "[Bug] ").
+    // 6. Upload full logs to Supabase Storage (non-fatal).
+    final logs = detail.logs ?? '';
+    String? logsUrl;
+    if (logs.isNotEmpty) {
+      logsUrl = await _uploadLogs(reportId, logs);
+    }
+
+    // 7. Fetch triage comment if present.
+    final triage = await _repository.getTriageForReport(reportId);
+    final triageComment = triage?.comment;
+
+    // 8. Build issue title (first 80 chars of description, prefixed with "[Bug] ").
     final title = _issueTitle(detail.description);
 
-    // 7. Build issue body in CLI tool format.
+    // 9. Build issue body in CLI tool format.
     final body = _issueBody(
       platform: detail.platform ?? 'Unknown',
       deviceInfo: detail.deviceInfo ?? 'Unknown',
@@ -92,10 +104,12 @@ class GitHubSyncServiceImpl implements GitHubSyncService {
       contentHash: hash,
       description: detail.description,
       screenshotUrl: screenshotUrl,
-      logs: detail.logs ?? '',
+      logs: logs,
+      logsUrl: logsUrl,
+      triageComment: triageComment,
     );
 
-    // 8. Create the GitHub issue and write the URL back to the DB.
+    // 10. Create the GitHub issue and write the URL back to the DB.
     try {
       final issueUrl = await _createGitHubIssue(repo, title, body, token);
       await _repository.updateGithubIssueUrl(reportId, issueUrl);
@@ -197,6 +211,36 @@ class GitHubSyncServiceImpl implements GitHubSyncService {
     }
   }
 
+  /// Uploads full logs as a markdown file to Supabase Storage.
+  ///
+  /// Returns the public URL on success, or null on any failure (non-fatal).
+  Future<String?> _uploadLogs(String reportId, String logs) async {
+    try {
+      final bytes = utf8.encode(logs);
+      final path = '$reportId.md';
+
+      await SupabaseConfig.client.storage
+          .from('bug-logs')
+          .uploadBinary(
+            path,
+            Uint8List.fromList(bytes),
+            fileOptions: const FileOptions(
+              contentType: 'text/markdown',
+              upsert: true,
+            ),
+          );
+
+      final url = SupabaseConfig.client.storage
+          .from('bug-logs')
+          .getPublicUrl(path);
+      devLog('[GitHubSync] Logs uploaded: ${bytes.length} bytes → $url');
+      return url;
+    } catch (e) {
+      devLog('[GitHubSync] Log upload failed (non-fatal): $e');
+      return null;
+    }
+  }
+
   /// POSTs a new issue to GitHub REST API.
   ///
   /// Returns [html_url] (the GitHub web URL, NOT the API `url` field).
@@ -224,6 +268,7 @@ class GitHubSyncServiceImpl implements GitHubSyncService {
 
     if (response.statusCode == 401) throw const GitHubAuthException();
     if (response.statusCode != 201) {
+      devLog('[GitHubSync] Create issue failed: ${response.statusCode} ${response.body}');
       throw Exception('GitHub API error: ${response.statusCode}');
     }
 
@@ -257,6 +302,8 @@ class GitHubSyncServiceImpl implements GitHubSyncService {
     required String description,
     required String? screenshotUrl,
     required String logs,
+    required String? logsUrl,
+    required String? triageComment,
   }) {
     final buffer = StringBuffer();
 
@@ -279,6 +326,14 @@ class GitHubSyncServiceImpl implements GitHubSyncService {
     buffer.writeln(description);
     buffer.writeln();
 
+    // Triage notes (if present)
+    if (triageComment != null && triageComment.isNotEmpty) {
+      buffer.writeln('## Triage Notes');
+      buffer.writeln();
+      buffer.writeln(triageComment);
+      buffer.writeln();
+    }
+
     // Screenshot (if available)
     buffer.writeln('## Screenshot');
     buffer.writeln();
@@ -289,24 +344,29 @@ class GitHubSyncServiceImpl implements GitHubSyncService {
     }
     buffer.writeln();
 
-    // Logs in collapsible section, truncated to last 512 KB
-    buffer.writeln('<details>');
-    buffer.writeln('<summary>Logs</summary>');
+    // Logs section — full logs linked from Supabase Storage, tail inlined.
+    buffer.writeln('## Logs');
     buffer.writeln();
-    buffer.writeln('```');
+    if (logsUrl != null) {
+      buffer.writeln('[View full logs]($logsUrl)');
+      buffer.writeln();
+    }
     if (logs.isNotEmpty) {
-      const maxBytes = 512 * 1024; // 512 KB
-      final logBytes = utf8.encode(logs);
-      if (logBytes.length > maxBytes) {
-        final truncatedBytes = logBytes.sublist(logBytes.length - maxBytes);
-        buffer.writeln(utf8.decode(truncatedBytes, allowMalformed: true));
+      buffer.writeln('<details>');
+      buffer.writeln('<summary>Log tail (last 30 KB)</summary>');
+      buffer.writeln();
+      buffer.writeln('```');
+      const maxChars = 30 * 1024;
+      if (logs.length > maxChars) {
+        buffer.writeln('... (truncated)');
+        buffer.writeln(logs.substring(logs.length - maxChars));
       } else {
         buffer.writeln(logs);
       }
+      buffer.writeln('```');
+      buffer.writeln();
+      buffer.writeln('</details>');
     }
-    buffer.writeln('```');
-    buffer.writeln();
-    buffer.writeln('</details>');
 
     return buffer.toString();
   }

@@ -269,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     count.productName,
                                               ),
                                             ),
-                                          );
+                                          ).then((_) => _loadProducts());
                                         }
                                       : null,
                                   child: Padding(

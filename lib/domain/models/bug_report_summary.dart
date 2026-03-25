@@ -5,6 +5,7 @@ class BugReportSummary {
   final String? platform;
   final DateTime createdAt;
   final String? githubIssueUrl;
+  final String? githubIssueState;
   final String sourceApp;
 
   /// Populated from a parallel triage fetch — NOT from bug_reports columns.
@@ -17,6 +18,7 @@ class BugReportSummary {
     this.platform,
     required this.createdAt,
     this.githubIssueUrl,
+    this.githubIssueState,
     required this.sourceApp,
     this.triageTag,
   });
@@ -29,12 +31,14 @@ class BugReportSummary {
       platform: json['platform'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       githubIssueUrl: json['github_issue_url'] as String?,
+      githubIssueState: json['github_issue_state'] as String?,
       sourceApp: json['source_app'] as String,
-      // triageTag is not populated from JSON — comes from parallel triage fetch
     );
   }
 
-  BugReportSummary copyWith({String? triageTag}) {
+  bool get isClosedOnGitHub => githubIssueState == 'closed';
+
+  BugReportSummary copyWith({String? triageTag, String? githubIssueState}) {
     return BugReportSummary(
       id: id,
       description: description,
@@ -42,6 +46,7 @@ class BugReportSummary {
       platform: platform,
       createdAt: createdAt,
       githubIssueUrl: githubIssueUrl,
+      githubIssueState: githubIssueState ?? this.githubIssueState,
       sourceApp: sourceApp,
       triageTag: triageTag ?? this.triageTag,
     );
